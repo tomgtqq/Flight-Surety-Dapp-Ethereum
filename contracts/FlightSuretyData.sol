@@ -27,8 +27,7 @@ contract FlightSuretyData {
     uint public constant MIN = 4;                                   // Operate Multi-party consensus at least four airlines registered
     uint public airlinesAmount = 0;                                          // Total registered airlines
 
-
-
+    mapping(address => uint256) settlement;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -102,6 +101,29 @@ contract FlightSuretyData {
         _;
     }
 
+    /**
+    * @dev Rate limiting pattern
+    * rateLimit(30 minutes)
+    */
+    uint256 private enabled = block.timestamp;
+    modifier rateLimit(uint time){
+        require(block.timestamp >= enabled, "Rate limiting in effect");
+        enabled = enabled.add(time);
+        _;
+    }
+
+    /**
+    * @dev Re-entrancy Guard
+    */
+    uint256 private counter = 1;
+    modifier entrancyGuard(){
+        counter = counter.add(1);
+        uint256 guard = counter;
+        _;
+        require(guard == counter,"That is not allowed");
+    }
+
+
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -162,24 +184,6 @@ contract FlightSuretyData {
                 }
          }
 
-    function results(uint ballotId)
-        external
-        view
-        returns(
-            string name,
-            address airline,
-            uint vote,
-            bool approved,
-            uint amount
-            )
-            {
-                name = ballots[ballotId].name;
-                airline = ballots[ballotId].airline;
-                vote = ballots[ballotId].vote;
-                approved = ballots[ballotId].approved;
-                amount = airlinesAmount;
-            }
-
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -225,54 +229,6 @@ contract FlightSuretyData {
 
         airlinesAmount++;
     }
-
-
-//    /**
-//     * @dev Add an airline to the registration queue
-//     *      Can only be called from FlightSuretyApp contract
-//     *
-//     */
-//     function registerAirline
-//                             (
-//                                 string _name,
-//                                 address _airline
-//                             )
-//                             external
-//                             requireIsOperational
-//                             requireAirlineIsRegistered(msg.sender)
-//                             requireAirlineIsFunded(msg.sender)
-
-//     {
-//         require(!airlines[_airline].isRegistered, "Airline is already registered.");
-
-//         bool isDuplicate = false;
-
-//         for(uint c=0 ; c<multiCalls.length ; c++){
-//             if(multiCalls[c] == msg.sender){
-//                 isDuplicate = true;
-//                 break;
-//             }
-//         }
-
-//         require(!isDuplicate,"Caller has already called this function");
-
-//         multiCalls.push(msg.sender);
-
-//         if (quorum_amount <= quorum_min || multiCalls.length > quorum_amount.div(2)) {
-
-//                 airlines[_airline] = Profile({
-//                             name:_name,
-//                             isRegistered: true,
-//                             isFunded: false,
-//                             airline: _airline
-//                             });
-
-//                 quorum_amount.add(1);
-
-//                 multiCalls = new address[](0);
-//         }
-//     }
-
 
    /**
     * @dev Buy insurance for a flight
@@ -326,6 +282,28 @@ contract FlightSuretyData {
     {
         require(msg.value >= REGISTRATION_FUND,"Not enough fund to be paid when registering new airline");
         airlines[msg.sender].isFunded = true;
+    }
+
+    /**
+    * @dev get contract balance
+    */
+    function balanceOf() view public returns(uint) {
+    return address(this).balance;
+    }
+
+    /**
+    * @dev safe withdraw
+    */
+    function safeWithdraw(uint256 amount) external rateLimit(30 minutes) entrancyGuard{
+        // Checks
+        require(msg.sender == tx.origin, "Contracts not allowed");
+        require(settlement[msg.sender] >= amount,"insufficient funds");
+
+        // Effects
+        settlement[msg.sender] = settlement[msg.sender].sub(amount);
+
+        // Interaction
+        msg.sender.transfer(amount);
     }
 
     function getFlightKey
