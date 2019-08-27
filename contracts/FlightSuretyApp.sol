@@ -25,6 +25,7 @@ contract FlightSuretyApp {
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
     address private contractOwner;          // Account used to deploy contract
+    bool private operational = true;   
 
     struct Flight {
         bool isRegistered;
@@ -43,13 +44,12 @@ contract FlightSuretyApp {
 
     /**
     * @dev Modifier that requires the "operational" boolean variable to be "true"
-    *      This is used on all state changing functions to pause the contract in 
+    *      This is used on all state changing functions to pause the contract in
     *      the event there is an issue that needs to be fixed
     */
-    modifier requireIsOperational() 
+    modifier requireIsOperational()
     {
-         // Modify to call data contract's status
-        require(true, "Contract is currently not operational");  
+        require(operational, "Contract is currently not operational");
         _;  // All modifiers require an "_" which indicates where the function body will be added
     }
 
@@ -82,19 +82,35 @@ contract FlightSuretyApp {
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
-
-    function isOperational() 
-                            public 
-                            pure 
-                            returns(bool) 
+    /**
+    * @dev Get operating status of contract
+    *
+    * @return A bool that is the current operating status
+    */
+    function isOperational()
+                            public
+                            view
+                            returns(bool)
     {
-        return true;  // Modify to call data contract's status
+        return operational;
     }
 
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
 
+    /**
+    * @dev Sets contract operations on/off
+    *
+    * When operational mode is disabled, all write transactions except for this one will fail
+    */
+    function setOperatingStatus(bool mode)
+        external
+        requireContractOwner
+    {
+        require(mode != operational, "New mode must be different from existing mode");
+        operational = mode;
+    }
   
    /**
     * @dev Add an airline to the registration queue
@@ -162,13 +178,16 @@ contract FlightSuretyApp {
                                             });
 
         emit OracleRequest(index, airline, flight, timestamp);
-    } 
+    }
 
 
-// region ORACLE MANAGEMENT
+    /********************************************************************************************/
+    /*                                   ORACLE MANAGEMENT                            */
+    /********************************************************************************************/
+
 
     // Incremented to add pseudo-randomness at various points
-    uint8 private nonce = 0;    
+    uint8 private nonce = 0;
 
     // Fee to be paid when registering oracle
     uint256 public constant REGISTRATION_FEE = 1 ether;
@@ -179,7 +198,7 @@ contract FlightSuretyApp {
 
     struct Oracle {
         bool isRegistered;
-        uint8[3] indexes;        
+        uint8[3] indexes;
     }
 
     // Track all registered oracles
