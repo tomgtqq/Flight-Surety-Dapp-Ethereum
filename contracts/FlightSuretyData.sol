@@ -20,12 +20,11 @@ contract FlightSuretyData {
     }
     mapping(address => Profile) private airlines;                       // Mapping for storing airline
 
-    uint256 public constant  REGISTRATION_FUND = 10 ether;              // fund to be paid when registering new airline
+    uint256 private constant  REGISTRATION_FUND = 10 ether;              // fund to be paid when registering new airline
+    uint256 private constant  MIN_INSURED_VALUE = 1 ether;
 
-    uint256 private airlinesAmount = 0;                                  // Total registered airlines
+    uint256 private airlinesAmount = 0;                                 // Total registered airlines
     uint256 private constant AUTHORIZED = 1;
-
-    mapping(address => uint256) settlement;
 
     struct Flight {
         string flight;
@@ -37,6 +36,10 @@ contract FlightSuretyData {
     mapping(bytes32 => Flight) private flights;
 
     mapping(address => uint256) private authorizedContracts;
+
+    mapping(bytes32 => mapping(address => uint256)) private insurance;
+
+    mapping(address => uint256) deposit;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -130,6 +133,15 @@ contract FlightSuretyData {
         _;
     }
 
+   /**
+    * @dev check value to refund
+    */
+    modifier checkValue(uint256 due ){
+        _;
+        uint256 amountToRefund = msg.value.sub(due);
+        msg.sender.transfer(amountToRefund);
+    }
+
     /********************************************************************************************/
     /*                             MANAGMENT AIRLINES AND FLIGHTS                               */
     /********************************************************************************************/
@@ -174,7 +186,7 @@ contract FlightSuretyData {
                 )
     {
         require(airlines[airline].isRegistered, "Airline wasn't registered.");
-                    name = airlines[airline].nam;
+                    name = airlines[airline].name;
                     isRegistered = airlines[airline].isRegistered;
                     isFunded = airlines[airline].isFunded;
     }
@@ -182,7 +194,11 @@ contract FlightSuretyData {
     * @dev Get airlines amount
     *
     */
-    function getAirlinesAmount() external view returns(uint256){
+    function getAirlinesAmount()
+        external
+        view
+        requireIsOperational
+    returns(uint256){
         return airlinesAmount;
     }
 
@@ -228,7 +244,7 @@ contract FlightSuretyData {
     {
         require(flights[flightKey].isRegistered, "flights wasn't registered.");
 
-        flights[flightKey] = Flight({statusCode: statusCode});
+        flights[flightKey].statusCode = statusCode;
     }
 
         /**
@@ -284,15 +300,23 @@ contract FlightSuretyData {
     /**
     * @dev Check if the airline was registered
     */
-    function isAirlineRegistered(address _airline) public view returns(bool)
-    {
-        return airlines[_airline].isRegistered;
-    }
+    function isAirlineRegistered(address _airline)
+        public
+        view
+        requireIsOperational
+        returns(bool)
+        {
+            return airlines[_airline].isRegistered;
+        }
 
     /**
     * @dev Check if the airline invested capital
     */
-    function isAirlineFunded(address _airline) public view returns(bool)
+    function isAirlineFunded(address _airline)
+        public
+        view
+        requireIsOperational
+        returns(bool)
     {
         return airlines[_airline].isFunded;
     }
@@ -316,6 +340,106 @@ contract FlightSuretyData {
             {
                 delete authorizedContracts[contractAddress];
             }
+            
+    /********************************************************************************************/
+    /*                                   CONTRACT FUNCTION                                      */
+    /********************************************************************************************/
+
+    /**
+    * @dev get contract balance
+    */
+    function balanceOf()
+        public
+        view
+        returns(uint)
+        {
+            return address(this).balance;
+        }
+
+    /**
+    * @dev Initial funding for the insurance. Unless there are too many delayed flights
+    *      resulting in insurance payouts, the contract should be self-sustaining
+    *
+    */
+
+    function fund()
+        public
+        payable
+        requireIsOperational
+        requireAirlineIsRegistered(msg.sender)
+        checkValue(REGISTRATION_FUND)
+    {
+        require(msg.value >= REGISTRATION_FUND,"Not enough fund to be paid when registering new airline");
+        airlines[msg.sender].isFunded = true;
+    }
+
+    /**
+    * @dev Buy insurance for a flight
+    */
+    function buyInsurance
+            (
+                bytes32 flightKey,
+                uint256 insuredValue
+            )
+            external
+            payable
+            requireIsOperational
+    {
+        require(msg.value >= MIN_INSURED_VALUE,"Minimum insurance is 1 ether");
+        insurance[flightKey][msg.sender] = insuredValue;
+    }
+
+    /**
+    * @dev Check insurance for a flight
+    */
+    function checkInsurance
+            (
+                bytes32 flightKey,
+                address applicant
+            )
+            external
+            view
+            requireIsOperational
+            returns(uint256)
+    {
+        return insurance[flightKey][applicant];
+    }
+
+
+    /**
+     *  @dev Credits payouts to insurees
+    */
+    function creditInsurees
+            (
+                uint256 amount,
+                address applicant
+            )
+            external
+            requireIsOperational
+            requireIsCallerAuthorized
+    {
+        deposit[applicant] = amount;
+    }
+
+    /**
+    * @dev safe withdraw
+    */
+    function safeWithdraw(uint256 amount)
+                external
+                requireIsOperational
+                rateLimit(30 minutes)
+                entrancyGuard
+    {
+        // Checks
+        require(msg.sender == tx.origin, "Contracts not allowed");
+        require(deposit[msg.sender] >= amount,"insufficient funds");
+
+        // Effects
+        deposit[msg.sender] = deposit[msg.sender].sub(amount);
+
+        // Interaction
+        msg.sender.transfer(amount);
+    }
 
     /********************************************************************************************/
     /*                                     FOR TESTING                                          */
@@ -325,7 +449,6 @@ contract FlightSuretyData {
     * @dev For testing
     * can block access to functions using requireIsOperational when operating status is false
     */
-   
     function setTestingMode
                          (
                                 bool mode
