@@ -12,6 +12,8 @@ import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract FlightSuretyApp {
     using SafeMath for uint256; // Allow SafeMath functions to be called for all uint256 types (similar to "prototype" in Javascript)
 
+    FlightSuretyData flightSuretyData;
+
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
@@ -25,15 +27,33 @@ contract FlightSuretyApp {
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
     address private contractOwner;          // Account used to deploy contract
-    bool private operational = true;   
+    bool private operational = true;
+
+    uint256 public constant MIN = 4;        // Operate Multi-party consensus at least four airlines registered
 
     struct Flight {
+        string flight;
         bool isRegistered;
         uint8 statusCode;
         uint256 updatedTimestamp;
         address airline;
     }
     mapping(bytes32 => Flight) private flights;
+
+
+    /********************************************************************************************/
+    /*                                       CONSTRUCTOR                                        */
+    /********************************************************************************************/
+
+    /**
+    * @dev Contract constructor
+    */
+    constructor( address dataContract ) public
+    {
+        contractOwner = msg.sender;
+        flightSuretyData = FlightSuretyData(dataContract);
+    }
+
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -62,88 +82,139 @@ contract FlightSuretyApp {
         _;
     }
 
-    /********************************************************************************************/
-    /*                                       CONSTRUCTOR                                        */
-    /********************************************************************************************/
-
     /**
-    * @dev Contract constructor
-    *
+    * @dev Modifier that requires the airline was registered
     */
-    constructor
-                                (
-                                ) 
-                                public 
+    modifier requireAirlineIsRegistered(address _airline)
     {
-        contractOwner = msg.sender;
-        //TODO: add smart contract data address
+        require(flightSuretyData.isAirlineRegistered(), "The airline wasn't registered");
+        _;
+    }
+
+        /**
+    * @dev Modifier that requires the airline invested capital
+    */
+    modifier requireAirlineIsFunded(address _airline)
+    {
+        require(flightSuretyData.isAirlineFunded(), "The airline didn't invested capital");
+        _;
     }
 
     /********************************************************************************************/
-    /*                                       UTILITY FUNCTIONS                                  */
-    /********************************************************************************************/
-    /**
-    * @dev Get operating status of contract
-    *
-    * @return A bool that is the current operating status
-    */
-    function isOperational()
-                            public
-                            view
-                            returns(bool)
-    {
-        return operational;
-    }
-
-    /********************************************************************************************/
-    /*                                     SMART CONTRACT FUNCTIONS                             */
+    /*                       MULTI-PARTY CONSENSUS TO REGISTER NEW AIRLINES                     */
     /********************************************************************************************/
 
-    /**
-    * @dev Sets contract operations on/off
-    *
-    * When operational mode is disabled, all write transactions except for this one will fail
-    */
-    function setOperatingStatus(bool mode)
-        external
-        requireContractOwner
-    {
-        require(mode != operational, "New mode must be different from existing mode");
-        operational = mode;
+    struct Ballot {
+        uint id;
+        string name;
+        address airline;
+        uint256 vote;
+        bool approved;
     }
-  
+    mapping(uint => Ballot) ballots;
+    uint256 nextBallotId;
+
+    mapping(address => mapping(uint => bool)) votes;
+
    /**
+    * @dev create ballot for adding an airline to the registration queue
+    *
+    */
+    function createBallot(
+        string calldata name,
+        address airline
+        )
+        external
+        requireAirlineIsRegistered(msg.sender)
+        requireAirlineIsFunded(msg.sender)
+        {
+        ballots[nextBallotId].id = nextBallotId;
+        ballots[nextBallotId].name = name;
+        ballots[nextBallotId].airline = airline;
+        nextBallotId.add(1);
+    }
+
+   /**
+    * @dev vote for adding an airline to the registration queue
+    *
+    */
+    function vote(uint ballotId)
+        external
+        requireAirlineIsRegistered(msg.sender)
+        requireAirlineIsFunded(msg.sender)
+        {
+            require(votes[msg.sender][ballotId] == false, 'voter can only vote once for a ballot');
+            votes[msg.sender][ballotId] = true;
+            ballots[ballotId].vote.add(1);
+
+            uint256 airlinesAmount = flightSuretyData.getAirlinesAmount();
+
+            if(ballots[ballotId].vote > airlinesAmount.div(2) || airlinesAmount <= MIN ){
+                    ballots[ballotId].approved = true;
+                }
+         }
+
+    /********************************************************************************************/
+    /*                             MANAGMENT AIRLINES AND FLIGHTS                               */
+    /********************************************************************************************/
+
+    /**
     * @dev Add an airline to the registration queue
     *
-    */   
+    */
     function registerAirline
-                            (   
+                            (
+                                string calldata name,
+                                address airline,
+                                uint ballotId
                             )
                             external
-                            pure
-                            returns(bool success, uint256 votes)
+                            requireIsOperational
+                            requireAirlineIsRegistered(msg.sender)
+                            requireAirlineIsFunded(msg.sender)
+
     {
-        return (success, 0);
+        require(ballots[ballotId].approved,"Ballot wasn't approved");
+        flightSuretyData.addAirline(name,airline);
     }
 
-
-   /**
+     /**
     * @dev Register a future flight for insuring.
     *
-    */  
+    */
     function registerFlight
-                                (
-                                )
-                                external
-                                pure
+                            (
+                                string calldata flight,
+                                uint8 statusCode,
+                                uint256 updatedTimestamp,
+                                address airline
+                            )
+                        external
+                        requireIsOperational
+                        requireAirlineIsRegistered(msg.sender)
+                        requireAirlineIsFunded(msg.sender)
     {
-
+         bytes32 flightKey = getFlightKey(airline,flight,updatedTimestamp);
+         flightSuretyData.addFlights(flightKey,flight,statusCode,updatedTimestamp,airline);
     }
-    
+
+    function getFlightKey
+                        (
+                            address airline,
+                            string memory flight,
+                            uint256 timestamp
+                        )
+                        pure
+                        internal
+                        returns(bytes32)
+    {
+        return keccak256(abi.encodePacked(airline, flight, timestamp));
+    }
+
    /**
     * @dev Called after oracle has updated flight status
     *
-    */  
+    */
     function processFlightStatus
                                 (
                                     address airline,
@@ -180,6 +251,35 @@ contract FlightSuretyApp {
         emit OracleRequest(index, airline, flight, timestamp);
     }
 
+    /********************************************************************************************/
+    /*                                     SMART CONTRACT FUNCTIONS                             */
+    /********************************************************************************************/
+
+    /**
+    * @dev Sets contract operations on/off
+    *
+    * When operational mode is disabled, all write transactions except for this one will fail
+    */
+    function setOperatingStatus(bool mode)
+        external
+        requireContractOwner
+    {
+        require(mode != operational, "New mode must be different from existing mode");
+        operational = mode;
+    }
+
+      /**
+    * @dev Get operating status of contract
+    *
+    * @return A bool that is the current operating status
+    */
+    function isOperational()
+                            public
+                            view
+                            returns(bool)
+    {
+        return operational;
+    }
 
     /********************************************************************************************/
     /*                                   ORACLE MANAGEMENT                            */
@@ -258,9 +358,6 @@ contract FlightSuretyApp {
         return oracles[msg.sender].indexes;
     }
 
-
-
-
     // Called by oracle when a response is available to an outstanding request
     // For the response to be accepted, there must be a pending request that is open
     // and matches one of the three Indexes randomly assigned to the oracle at the
@@ -296,23 +393,10 @@ contract FlightSuretyApp {
     }
 
 
-    function getFlightKey
-                        (
-                            address airline,
-                            string flight,
-                            uint256 timestamp
-                        )
-                        pure
-                        internal
-                        returns(bytes32) 
-    {
-        return keccak256(abi.encodePacked(airline, flight, timestamp));
-    }
-
     // Returns array of three non-duplicating integers from 0-9
     function generateIndexes
-                            (                       
-                                address account         
+                            (
+                                address account
                             )
                             internal
                             returns(uint8[3])
@@ -352,7 +436,15 @@ contract FlightSuretyApp {
 
         return random;
     }
+}
+/********************************************************************************************/
+/*                                  FlightSuretyData contract                               */
+/********************************************************************************************/
+contract FlightSuretyData{
+    function isAirlineRegistered(address _airline) public view returns(bool);
+    function isAirlineFunded(address _airline) public view returns(bool);
+    function getAirlinesAmount() public view returns(uint256);
+    function addAirline(string name,address airline) external;
+    function addFlights(bytes32 flightKey,string flight,uint8 statusCode,uint256 updatedTimestamp,address airline)external;
+}
 
-// endregion
-
-}   
