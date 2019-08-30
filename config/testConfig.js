@@ -22,22 +22,14 @@ var Config = async function(accounts) {
 
     let owner = accounts[0];
     let firstAirline = accounts[1];
-    let secondAirline = accounts[2];
-    let thirdAirline = accounts[3];
-    let fourthAirline = accounts[4];
-    let fifthAirline = accounts[5];
 
-    let flightSuretyData = await FlightSuretyData.new();
-    let flightSuretyApp = await FlightSuretyApp.new();
+    let flightSuretyData = await FlightSuretyData.new(firstAirline);
+    let flightSuretyApp = await FlightSuretyApp.new(flightSuretyData.address);
 
     
     return {
         owner: owner,
         firstAirline: firstAirline,
-        secondAirline: secondAirline,
-        thirdAirline: thirdAirline,
-        fourthAirline: fourthAirline,
-        fifthAirline: fifthAirline,
         weiMultiple: (new BigNumber(10)).pow(18),
         testAddresses: testAddresses,
         flightSuretyData: flightSuretyData,
