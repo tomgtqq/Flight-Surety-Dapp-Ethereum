@@ -5,7 +5,8 @@
         "aCity":"EWR  New York Newark Liberty International Airport B",
         "departCNDate": "Sep 1 15:35",
         "arrivalCNDate": "Sep 2 13:15",
-        "status":""
+        "status":"",
+        "airline":"0x74F4b95b8DF892AC46B12755FafD517c416C75c9"
     },
     "Aeroflot": {
 		"flight": "SU2583",
@@ -13,7 +14,8 @@
         "aCity":"JFK  New York John F. Kennedy International Airport T1",
         "departCNDate": "Sep 1 17:15",
         "arrivalCNDate": "Sep 2 13:15",
-        "status":""
+        "status":"",
+        "airline":"0x35374ff150756cec63f7909b5053cd49bD26dE33"
     },
     "Aer Lingus": {
 		"flight": "SU2583",
@@ -21,7 +23,8 @@
         "aCity":" JFK  New York John F. Kennedy International Airport T5",
         "departCNDate": "Sep 1 14:45",
         "arrivalCNDate": "Sep 2 10:15",
-        "status":""
+        "status":"",
+        "airline":"0xD44D382588859aEE64f928EC542aA11590375FF8"
     },
     "Easy Jet": {
 		"flight": "U23151",
@@ -29,7 +32,8 @@
         "aCity":"CDG  Paris Charles De Gaulle Airport T2D",
         "departCNDate": "Sep 1 07:00",
         "arrivalCNDate": "Sep 1 09:20",
-        "status":""
+        "status":"",
+        "airline":"0xF3aFb4cc5e2d27Acd07747EE1367FA092419d4B4"
     },
     "Air China": {
 		"flight": "CA788",
@@ -37,7 +41,8 @@
         "aCity":"PEK  Beijing Beijing Capital International Airport T3",
         "departCNDate": "Sep 2 15:00",
         "arrivalCNDate": "Sep 3 08:15",
-        "status":""
+        "status":"",
+        "airline":"0xf9aaDAA2A24522c8B89226e45D0cB2387a23d769"
     },
     "Swiss": {
 		"flight": "LX461",
@@ -45,6 +50,7 @@
         "aCity":"PEK  Beijing Beijing Capital International Airport T3",
         "departCNDate": "Sep 2 10:00",
         "arrivalCNDate": "Sep 3 05:15",
-        "status":""
+        "status":"",
+        "airline":"0xb1Ff48dAAdC28e9376137A4C46fa76b83baa24c0"
     }
 }

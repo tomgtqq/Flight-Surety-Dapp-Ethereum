@@ -1,4 +1,5 @@
-import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
+import 'babel-polyfill';
+import FlightSuretyApp from '../../build/contracts/flightSuretyApp.json';
 import Config from './config.json';
 import Web3 from 'web3';
 import express from 'express';
@@ -13,36 +14,45 @@ const STATUS_CODE_LATE_WEATHER = 30;
 const STATUS_CODE_LATE_TECHNICAL = 40;
 const STATUS_CODE_LATE_OTHER = 50;
 
-// Register 20 ORACLES
 const ORACLES_COUNT = 20;
-
 
 let config = Config['localhost'];
 let web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace('http', 'ws')));
 web3.eth.defaultAccount = web3.eth.accounts[0];
 let flightSuretyApp = new web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
 
-// Register oracles staking
-const fee = await flightSuretyApp.REGISTRATION_FEE.call();
-// Save oracles index values
+
 let oracleIndexes = [];
 
-// Register oracles 
-for(let a=1; a<ORACLES_COUNT; a++) {
-   try{
-        await flightSuretyApp.registerOracle({ from: web3.eth.accounts[a], value: fee });
-        let result = await flightSuretyApp.getMyIndexes.call({from: accounts[a]});
-        console.log(`Oracle Registered: ${result[0]}, ${result[1]}, ${result[2]}`);
-        oracleIndexes[web3.eth.accounts[a]] = result;
-      }
+const registerOracle = async () => {
+    const accounts = await web3.eth.getAccounts();
+    let staking = await flightSuretyApp.methods.REGISTRATION_FEE().call();
+    console.log(`staking:${staking}`);
+    try{
+        // Register oracles 
+        for(let a=1; a<=ORACLES_COUNT; a++) {
+                await flightSuretyApp.methods.registerOracle()
+                .send({
+                        from: accounts[a], 
+                        value: staking,
+                        gas:30000000000,
+                        gasPrice:100000
+                      });
+                let result = await flightSuretyApp.methods.getMyIndexes().call({from: accounts[a]});
+                console.log(`Oracle Registered: ${result[0]}, ${result[1]}, ${result[2]}`);
+                oracleIndexes[accounts[a]] = result;
+              }
+            }
     catch(e) {
-        console.error(e);
-    }
+         console.error(e);
+    }      
 }
+
+registerOracle();
 
 flightSuretyApp.events.OracleRequest({
     fromBlock: 0
-  }, function (error, event) {
+  }, async (error, event) => {
     if (error) console.log(error)
     console.log(event)
     
@@ -52,7 +62,7 @@ flightSuretyApp.events.OracleRequest({
 
     try {
       // Submit a response...it will only be accepted if there is an Index match
-      await flightSuretyApp.submitOracleResponse(event.index, event.airline, event.flight, event.timestamp, STATUS_CODE_LATE_AIRLINE, {from: account});
+      await flightSuretyApp.methods.submitOracleResponse(event.index, event.airline, event.flight, event.timestamp, STATUS_CODE_LATE_AIRLINE, {from: account});
     }
     catch(e) {
       // Enable this when debugging
