@@ -7,22 +7,16 @@ const truffleAssert = require('truffle-assertions');
 contract('Flight Surety Tests', async (accounts) => {
 
   var config;
-  const STATUS_CODE_LATE_AIRLINE = 20;
+
   const STATUS_CODE_UNKNOWN = 0;
   const STATUS_CODE_ON_TIME = 10;
   const STATUS_CODE_LATE_AIRLINE = 20;
   const STATUS_CODE_LATE_WEATHER = 30;
   const STATUS_CODE_LATE_TECHNICAL = 40;
   const STATUS_CODE_LATE_OTHER = 50;
-
-  const flightStatus = {
-        STATUS_CODE_UNKNOWN,
-        STATUS_CODE_ON_TIME,
-        STATUS_CODE_LATE_AIRLINE,
-        STATUS_CODE_LATE_WEATHER,
-        STATUS_CODE_LATE_TECHNICAL,
-        STATUS_CODE_LATE_OTHER 
-     }
+    
+  let settingStatus;
+  
 
   const TEST_ORACLES_COUNT = 20;
   let oracleIndexes = [];
@@ -292,6 +286,17 @@ contract('Flight Surety Tests', async (accounts) => {
         let resOracles=[];
         let reqIndex;
 
+        const flightStatus = [
+            STATUS_CODE_UNKNOWN,
+            STATUS_CODE_ON_TIME,
+            STATUS_CODE_LATE_AIRLINE,
+            STATUS_CODE_LATE_WEATHER,
+            STATUS_CODE_LATE_TECHNICAL,
+            STATUS_CODE_LATE_OTHER 
+         ]
+
+        settingStatus = flightStatus[Math.floor(Math.random()*6)];
+
         let fetchTx = await config.flightSuretyApp.fetchFlightStatus(airline,flight,timestamp);
 
         truffleAssert.eventEmitted(fetchTx, 'OracleRequest', (ev) => {
@@ -310,68 +315,82 @@ contract('Flight Surety Tests', async (accounts) => {
                                         airline,
                                         flight,
                                         timestamp, 
-                                        STATUS_CODE_LATE_AIRLINE, 
+                                        settingStatus, 
                                         {from: oracle.address});
             }
+        console.log(`Respond with random status code, now flight's status is ${settingStatus}`);
     });
 
-    it('Passenger receives credit of 1.5X the amount,When flight is delayed to airline fault', async function () {
-        
-        let operateFaild = false;
-        let airline = "0x74F4b95b8DF892AC46B12755FafD517c416C75c9";
-        let flight = "SK806";
-        let timestamp = "2019090115350";
-        let flightKey = await config.flightSuretyApp.getFlightKey(airline,flight,timestamp);
-        
 
-        try{
-            let insurance = await config.flightSuretyData.checkInsurance(flightKey,accounts[7]);
+    it('If Flight status is 20, the passenger receives credit of 1.5X the amount .Otherwise can not', async function () {
+
+            let operateFaild = false;
+            let airline = "0x74F4b95b8DF892AC46B12755FafD517c416C75c9";
+            let flight = "SK806";
+            let timestamp = "2019090115350";
+            let flightKey = await config.flightSuretyApp.getFlightKey(airline,flight,timestamp);
+            
+
+            try{
+                let insurance = await config.flightSuretyData.checkInsurance(flightKey,accounts[7]);
+                // ASSERT
+                await config.flightSuretyApp.appCreditInsurees(airline,flight,timestamp,{from: accounts[7]}); 
+
+                let deposit =  await config.flightSuretyData.checkDeposit({from: accounts[7]});
+                assert.equal(new BigNumber(insurance).toNumber()*1.5,  new BigNumber(deposit).toNumber(), "Cann't credit of 1.5X the amount of insurance");  
+            }
+            catch(e) {
+                console.error(e);
+                operateFaild = true;
+            }
+        if(settingStatus === STATUS_CODE_LATE_AIRLINE){
             // ASSERT
-            await config.flightSuretyApp.appCreditInsurees(airline,flight,timestamp,{from: accounts[7]}); 
-
-            let deposit =  await config.flightSuretyData.checkDeposit({from: accounts[7]});
-            assert.equal(new BigNumber(insurance).toNumber()*1.5,  new BigNumber(deposit).toNumber(), "Cann't credit of 1.5X the amount of insurance");  
+                assert.equal(operateFaild, false, "Cann't credit of 1.5X the amount ,Operate Faild");  
+        }else{
+                assert.equal(operateFaild, true, "The Flight status isn't STATUS_CODE_LATE_AIRLINE, Can't credit"); 
         }
-        catch(e) {
-            console.error(e);
-            operateFaild = true;
-        }
-        // ASSERT
-        assert.equal(operateFaild, false, "Cann't credit of 1.5X the amount ,Operate Faild");  
     });
 
-    it('passenger can withdraw any funds owed to them as a result of receiving credit for insurance payout', async function () {
-        
-        let airline = "0x74F4b95b8DF892AC46B12755FafD517c416C75c9";
-        let flight = "SK806";
-        let timestamp = "2019090115350";
-        let flightKey = await config.flightSuretyApp.getFlightKey(airline,flight,timestamp);
-        let amount = web3.utils.toWei("1", "ether");
+    it('If Flight status is 20, the passenger can withdraw any funds owed to them as a result of receiving credit for insurance payout. Otherwise can not', async function () {
+            let operateFaild = false;
+            let airline = "0x74F4b95b8DF892AC46B12755FafD517c416C75c9";
+            let flight = "SK806";
+            let timestamp = "2019090115350";
+            let flightKey = await config.flightSuretyApp.getFlightKey(airline,flight,timestamp);
+            let amount = web3.utils.toWei("1", "ether");
 
-        let originalInsurance = await config.flightSuretyData.checkInsurance(flightKey,accounts[7]);
-        let originalDeposit = await config.flightSuretyData.checkDeposit({from:accounts[7]});
-        let originalBalance = await config.flightSuretyData.balanceOf();
+            let originalInsurance = await config.flightSuretyData.checkInsurance(flightKey,accounts[7]);
+            let originalDeposit = await config.flightSuretyData.checkDeposit({from:accounts[7]});
+            let originalBalance = await config.flightSuretyData.balanceOf();
 
-        console.log(`originalInsurance:${originalInsurance}`);
-        console.log(`originalDeposit:${originalDeposit}`);
-        console.log(`originalBalance:${originalBalance}`);
+            console.log(`originalInsurance:${originalInsurance}`);
+            console.log(`originalDeposit:${originalDeposit}`);
+            console.log(`originalBalance:${originalBalance}`);
 
-     try{
-         await config.flightSuretyData.safeWithdraw(amount,{from: accounts[7]});
-        }
-    catch(e)
-        {
-            console.error(e);
-        }      
-       
-        let nowDeposit = await config.flightSuretyData.checkDeposit({from:accounts[7]});
-        let nowBalance = await config.flightSuretyData.balanceOf();
+            try{
+                await config.flightSuretyData.safeWithdraw(amount,{from: accounts[7]});
+            }
+            catch(e)
+            {
+                console.error(e);
+                operateFaild = true;
+            }      
 
-        console.log(`nowDeposit:${nowDeposit}`);
-        console.log(`nowBalance:${nowBalance}`);
+            let nowDeposit = await config.flightSuretyData.checkDeposit({from:accounts[7]});
+            let nowBalance = await config.flightSuretyData.balanceOf();
 
-        assert.equal(new BigNumber(originalBalance).toNumber() - new BigNumber(nowBalance).toNumber(), 
-                     amount, 
-                    "Balance is not right"); 
-    });
+            console.log(`nowDeposit:${nowDeposit}`);
+            console.log(`nowBalance:${nowBalance}`);
+            if(settingStatus === STATUS_CODE_LATE_AIRLINE){
+                // ASSERT
+                assert.equal(new BigNumber(originalBalance).toNumber() - new BigNumber(nowBalance).toNumber(), 
+                                amount, 
+                                "Balance is not right"); 
+
+                assert.equal(operateFaild, false, "Cann't withdraw ,Operate Faild");  
+
+            }else{
+                assert.equal(operateFaild, true, "The Flight status isn't STATUS_CODE_LATE_AIRLINE"); 
+            }
+     });
 })

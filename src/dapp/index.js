@@ -27,8 +27,6 @@ import './flightsurety.css';
         })
     
     });
-    
-
 })();
 
 
