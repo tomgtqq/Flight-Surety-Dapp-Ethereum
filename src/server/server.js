@@ -40,7 +40,15 @@ const registerOracle = async () => {
                       });
                 let result = await flightSuretyApp.methods.getMyIndexes().call({from: accounts[a]});
                 console.log(`Oracle Registered: ${result[0]}, ${result[1]}, ${result[2]}`);
-                oracleIndexes[accounts[a]] = result;
+                
+                oracleIndexes.push({
+                  address: accounts[a],
+                  indexes: [
+                      new BigNumber(result[0]).toString(), 
+                      new BigNumber(result[1]).toString(), 
+                      new BigNumber(result[2]).toString()
+                    ]
+                  });
               }
             }
     catch(e) {
@@ -55,20 +63,29 @@ flightSuretyApp.events.OracleRequest({
   }, async (error, event) => {
     if (error) console.log(error)
     console.log(event)
-    
-    let account = oracleIndexes.filter((indexes,address)=>{
-        if(indexes[0]=== event.index||indexes[1]=== event.index||indexes[2]=== event.index)
-        return address});
 
-    try {
-      // Submit a response...it will only be accepted if there is an Index match
-      await flightSuretyApp.methods.submitOracleResponse(event.index, event.airline, event.flight, event.timestamp, STATUS_CODE_LATE_AIRLINE, {from: account});
-    }
-    catch(e) {
-      // Enable this when debugging
-        console.error(e);
-        console.log('\nError', event.index, event.airline, event.timestamp,account);
-    }
+    let reqIndex = new BigNumber(event.index).toString();
+
+    let resOracles = oracleIndexes.filter((oraclse)=>{
+        return (oraclse.indexes[0] === reqIndex||oraclse.indexes[1] === reqIndex||oraclse.indexes[2] === reqIndex)
+    });
+
+    for (const oracle of resOracles){  
+          try {
+            // Submit a response...it will only be accepted if there is an Index match
+            await flightSuretyApp.methods.submitOracleResponse( 
+                    event.index, 
+                    event.airline, 
+                    event.flight, 
+                    event.timestamp, 
+                    STATUS_CODE_LATE_AIRLINE, 
+                    {from: oracle.address});
+          }
+          catch(e) {
+            // Enable this when debugging
+              console.log('\nNot match Oracles', event.index, event.airline, event.timestamp,oracle.address);
+          }
+        }
 });
 
 

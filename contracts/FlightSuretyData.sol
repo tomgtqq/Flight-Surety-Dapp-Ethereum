@@ -120,7 +120,7 @@ contract FlightSuretyData {
     * @dev check if the caller was authorized
     */
     modifier requireIsCallerAuthorized(){
-        // require(authorizedContracts[msg.sender] == AUTHORIZED, "The callder wasn't authorized");
+        require(authorizedContracts[msg.sender] == AUTHORIZED, "The callder wasn't authorized");
         _;
     }
 
@@ -298,14 +298,26 @@ contract FlightSuretyData {
     */
     function buyInsurance
             (
-                bytes32 flightKey
+                address airline,
+                string  flight,
+                uint256 timestamp
             )
             external
             payable
             requireIsOperational
     {
+        require(msg.sender == tx.origin, "Contracts not allowed");
         require(msg.value >= MIN_INSURED_VALUE,"Minimum insurance is 1 ether");
-        insurance[flightKey][msg.sender] = msg.value;
+        require(timestamp> now,"Only purchase not boarding flights");  //block.timestamp
+
+        bytes32 flightKey = getFlightKey(airline,flight,timestamp);
+
+        uint256 a = insurance[flightKey][msg.sender];
+        uint256 b = msg.value;
+        uint256 c = a + b;
+
+        require(c >= a, "SafeMath: addition overflow");
+        insurance[flightKey][msg.sender] = c;
     }
 
     /**
@@ -313,27 +325,39 @@ contract FlightSuretyData {
     */
     function checkInsurance
             (
-                bytes32 flightKey
+                bytes32 flightKey,
+                address application
             )
-            public
+            external
             view
             requireIsOperational
-            requireIsCallerAuthorized
             returns(uint256)
     {
-        return insurance[flightKey][msg.sender];
+        return insurance[flightKey][application];
     }
 
 
     /**
      *  @dev Credits payouts to insurees
     */
-    function creditInsurees(uint256 amount)
+    function creditInsurees(
+            bytes32 flightKey,
+            uint256 amount,
+            address application
+            )
             external
             requireIsOperational
             requireIsCallerAuthorized
     {
-        deposit[msg.sender] = amount;
+        //Effects
+        insurance[flightKey][application] = 0;
+
+        //Interaction
+        uint256 a = deposit[application];
+        uint256 b = amount;
+        uint256 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+        deposit[application] = c;
     }
 
     /**
@@ -361,12 +385,19 @@ contract FlightSuretyData {
         require(deposit[msg.sender] >= amount,"insufficient funds");
 
         // Effects
-        deposit[msg.sender] = deposit[msg.sender].sub(amount);
+        //deposit[msg.sender] = deposit[msg.sender].sub(amount);
+
+        uint256 a = deposit[msg.sender];
+        uint256 b = amount;
+
+        require(b <= a, "SafeMath: subtraction overflow");
+        uint256 c = a - b;
+        deposit[msg.sender] = c;
 
         // Interaction
         msg.sender.transfer(amount);
     }
-    
+
     /**
     * @dev get contract address
     *
@@ -375,6 +406,25 @@ contract FlightSuretyData {
     function getContractAddress() external view returns(address)
     {
         return address(this);
+    }
+
+        /**
+    * @dev get FlightKey
+    *
+    * @return bytes32 flightKey
+    */
+    function getFlightKey
+                        (
+                            address airline,
+                            string  flight,
+                            uint256 timestamp
+                        )
+                        internal
+                        view
+                        requireIsOperational
+                        returns(bytes32)
+    {
+        return keccak256(abi.encodePacked(airline, flight, timestamp));
     }
 
     /********************************************************************************************/

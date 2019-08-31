@@ -2,12 +2,34 @@
 var Test = require('../config/testConfig.js');
 var BigNumber = require('bignumber.js');
 
+const truffleAssert = require('truffle-assertions');
+
 contract('Flight Surety Tests', async (accounts) => {
 
   var config;
+  const STATUS_CODE_LATE_AIRLINE = 20;
+  const STATUS_CODE_UNKNOWN = 0;
+  const STATUS_CODE_ON_TIME = 10;
+  const STATUS_CODE_LATE_AIRLINE = 20;
+  const STATUS_CODE_LATE_WEATHER = 30;
+  const STATUS_CODE_LATE_TECHNICAL = 40;
+  const STATUS_CODE_LATE_OTHER = 50;
+
+  const flightStatus = {
+        STATUS_CODE_UNKNOWN,
+        STATUS_CODE_ON_TIME,
+        STATUS_CODE_LATE_AIRLINE,
+        STATUS_CODE_LATE_WEATHER,
+        STATUS_CODE_LATE_TECHNICAL,
+        STATUS_CODE_LATE_OTHER 
+     }
+
+  const TEST_ORACLES_COUNT = 20;
+  let oracleIndexes = [];
+
   before('setup contract', async () => {
     config = await Test.Config(accounts);
-    await config.flightSuretyData.authorizeContract(config.flightSuretyApp.address);
+    await config.flightSuretyData.authorizeContract(config.flightSuretyApp.address,{from: config.owner});
   });
 
   /******************************************************************************************************/
@@ -210,9 +232,13 @@ contract('Flight Surety Tests', async (accounts) => {
         let timestamp = "2019090115350";
         let flightKey = await config.flightSuretyApp.getFlightKey(airline,flight,timestamp);
         try{
-            await config.flightSuretyData.buyInsurance(flightKey,{from: accounts[7] , value: fund});
-            let insurance = await config.flightSuretyData.checkInsurance(flightKey,{from: accounts[7]});
-            assert.equal(fund, new BigNumber(insurance).toNumber(), "Insurance didn't equal payment");  
+            await config.flightSuretyData.buyInsurance(
+                                                airline,
+                                                flight,
+                                                timestamp,
+                                                {from: accounts[7] , value: fund});
+            let insurance = await config.flightSuretyData.checkInsurance(flightKey,accounts[7]);
+            assert.equal(new BigNumber(fund).toString(), new BigNumber(insurance).toString(), "Insurance didn't equal payment");  
         }
         catch(e) {
             console.error(e);
@@ -222,27 +248,88 @@ contract('Flight Surety Tests', async (accounts) => {
         assert.equal(operateFaild, false, "Cann't buy insurance ,Operate Faild");  
     });
 
+    it('can register oracles', async () => {
+    
+        let reverted = false;
+        try 
+        {
+          // ARRANGE
+          let fee = await config.flightSuretyApp.REGISTRATION_FEE.call();
+          // ACT
+          for(let a=1; a<=TEST_ORACLES_COUNT; a++) {    
+              await config.flightSuretyApp.registerOracle({from: accounts[a], value: fee});
+              let result = await config.flightSuretyApp.getMyIndexes.call({from: accounts[a]});
+              console.log(`Oracle Registered: ${result[0]}, ${result[1]}, ${result[2]}`);
+
+              oracleIndexes.push({
+                        address: accounts[a],
+                        indexes: [
+                            new BigNumber(result[0]).toString(), 
+                            new BigNumber(result[1]).toString(), 
+                            new BigNumber(result[2]).toString()
+                          ]
+                    });
+                }
+          // Check balance
+          let dataBalance = await config.flightSuretyData.balanceOf();
+          console.log(`flightSuretyData contract balance: ${dataBalance}`);
+        }
+        catch(e) {
+          console.error(e);
+          reverted = true;
+        }
+        assert.equal(reverted, false, "cann't register oracles");   
+    
+      });
+
+
+    it('can request flight status', async function () {
+        
+        let airline = "0x74F4b95b8DF892AC46B12755FafD517c416C75c9";
+        let flight = "SK806";
+        let timestamp = "2019090115350";
+        
+        let resOracles=[];
+        let reqIndex;
+
+        let fetchTx = await config.flightSuretyApp.fetchFlightStatus(airline,flight,timestamp);
+
+        truffleAssert.eventEmitted(fetchTx, 'OracleRequest', (ev) => {
+
+            reqIndex = new BigNumber(ev.index).toString();
+
+            resOracles = oracleIndexes.filter((oraclse)=>{
+                return (oraclse.indexes[0] === reqIndex||oraclse.indexes[1] === reqIndex||oraclse.indexes[2] === reqIndex)
+            });
+            return true;
+        });
+
+        for (const oracle of resOracles){  
+             await config.flightSuretyApp.submitOracleResponse(
+                                        reqIndex,
+                                        airline,
+                                        flight,
+                                        timestamp, 
+                                        STATUS_CODE_LATE_AIRLINE, 
+                                        {from: oracle.address});
+            }
+    });
+
     it('Passenger receives credit of 1.5X the amount,When flight is delayed to airline fault', async function () {
         
         let operateFaild = false;
         let airline = "0x74F4b95b8DF892AC46B12755FafD517c416C75c9";
         let flight = "SK806";
         let timestamp = "2019090115350";
+        let flightKey = await config.flightSuretyApp.getFlightKey(airline,flight,timestamp);
+        
 
         try{
-              await config.flightSuretyApp.fetchFlightStatus(airline,flight,timestamp);
+            let insurance = await config.flightSuretyData.checkInsurance(flightKey,accounts[7]);
+            // ASSERT
+            await config.flightSuretyApp.appCreditInsurees(airline,flight,timestamp,{from: accounts[7]}); 
 
-            for(let a=1; a<=20; a++) {
-                let oracleIndexes  = await config.flightSuretyApp.getMyIndexes({from: accounts[a]});
-                console.log(`oracleIndexes: ${oracleIndexes[0]} ${oracleIndexes[1]} ${oracleIndexes[2]}`);
-                for(let idx=0;idx<3;idx++) {
-                        await config.flightSuretyApp.submitOracleResponse(oracleIndexes[idx],airline,flight,timestamp, STATUS_CODE_LATE_AIRLINE, {from: accounts[a]});
-                    }
-                }
-            // ASSERT     
-            let insurance = await config.flightSuretyData.checkInsurance(flightKey,{from: accounts[7]});
             let deposit =  await config.flightSuretyData.checkDeposit({from: accounts[7]});
-            
             assert.equal(new BigNumber(insurance).toNumber()*1.5,  new BigNumber(deposit).toNumber(), "Cann't credit of 1.5X the amount of insurance");  
         }
         catch(e) {
@@ -252,4 +339,39 @@ contract('Flight Surety Tests', async (accounts) => {
         // ASSERT
         assert.equal(operateFaild, false, "Cann't credit of 1.5X the amount ,Operate Faild");  
     });
-});
+
+    it('passenger can withdraw any funds owed to them as a result of receiving credit for insurance payout', async function () {
+        
+        let airline = "0x74F4b95b8DF892AC46B12755FafD517c416C75c9";
+        let flight = "SK806";
+        let timestamp = "2019090115350";
+        let flightKey = await config.flightSuretyApp.getFlightKey(airline,flight,timestamp);
+        let amount = web3.utils.toWei("1", "ether");
+
+        let originalInsurance = await config.flightSuretyData.checkInsurance(flightKey,accounts[7]);
+        let originalDeposit = await config.flightSuretyData.checkDeposit({from:accounts[7]});
+        let originalBalance = await config.flightSuretyData.balanceOf();
+
+        console.log(`originalInsurance:${originalInsurance}`);
+        console.log(`originalDeposit:${originalDeposit}`);
+        console.log(`originalBalance:${originalBalance}`);
+
+     try{
+         await config.flightSuretyData.safeWithdraw(amount,{from: accounts[7]});
+        }
+    catch(e)
+        {
+            console.error(e);
+        }      
+       
+        let nowDeposit = await config.flightSuretyData.checkDeposit({from:accounts[7]});
+        let nowBalance = await config.flightSuretyData.balanceOf();
+
+        console.log(`nowDeposit:${nowDeposit}`);
+        console.log(`nowBalance:${nowBalance}`);
+
+        assert.equal(new BigNumber(originalBalance).toNumber() - new BigNumber(nowBalance).toNumber(), 
+                     amount, 
+                    "Balance is not right"); 
+    });
+})
