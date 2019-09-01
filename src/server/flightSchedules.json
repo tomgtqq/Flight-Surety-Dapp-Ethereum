@@ -18,7 +18,7 @@
         "airline":"0x35374ff150756cec63f7909b5053cd49bD26dE33"
     },
     "Aer Lingus": {
-		"flight": "SU2583",
+		"flight": "AL2583",
         "dCity": "LHR  London London Heathrow Airport T2",
         "aCity":" JFK  New York John F. Kennedy International Airport T5",
         "departCNDate": "Sep 1 14:45",

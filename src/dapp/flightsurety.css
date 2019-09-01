@@ -4,24 +4,48 @@ body {
     background-size: cover;
 }
 
-.container {
-    margin-top: 400px;
-    background-color: #000;
-    opacity: 0.9;
-    color: #fff;
-    padding: 40px;
-}
-
-.top-20 {
-    margin-top: 20px;
-}
-
 h5 {
     color: #999999;
 }
 
 section {
     margin-bottom: 50px;
+}
+
+label.form {
+    font-size: 14px;
+    margin-right: 20px;
+}
+
+input {
+    margin-right: 30px;
+}
+
+/* class name */
+.container {
+    margin-top: 50px;
+    background-color: #000;
+    opacity: 0.8;
+    color: #fff;
+    padding: 40px;
+}
+
+.top-10 {
+    margin-top: 10px;
+}
+
+.top-20 {
+    margin-top: 20px;
+}
+
+.top-100 {
+    margin-top: 100px;
+}
+.bottom-20{
+    margin-bottom: 20px;
+}
+.left-20{
+    margin-left: 20px;
 }
 
 .field {
@@ -31,12 +55,4 @@ section {
 
 .field-value {
     color: #0e7fa8;
-}
-
-label.form {
-    font-size: 14px;
-    margin-right: 20px;
-}
-input {
-    margin-right: 30px;
 }
