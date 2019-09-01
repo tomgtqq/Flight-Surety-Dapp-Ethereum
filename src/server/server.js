@@ -4,6 +4,7 @@ import Config from './config.json';
 import Web3 from 'web3';
 import express from 'express';
 import flightSchedules from './flightSchedules.json';
+import BigNumber from 'bignumber.js';
 
 
 // Flight status codees
@@ -13,6 +14,17 @@ const STATUS_CODE_LATE_AIRLINE = 20;
 const STATUS_CODE_LATE_WEATHER = 30;
 const STATUS_CODE_LATE_TECHNICAL = 40;
 const STATUS_CODE_LATE_OTHER = 50;
+
+const flightStatus = [
+  STATUS_CODE_UNKNOWN,
+  STATUS_CODE_ON_TIME,
+  STATUS_CODE_LATE_AIRLINE,
+  STATUS_CODE_LATE_WEATHER,
+  STATUS_CODE_LATE_TECHNICAL,
+  STATUS_CODE_LATE_OTHER 
+]
+
+
 
 const ORACLES_COUNT = 20;
 
@@ -78,7 +90,7 @@ flightSuretyApp.events.OracleRequest({
                     event.airline, 
                     event.flight, 
                     event.timestamp, 
-                    STATUS_CODE_LATE_AIRLINE, 
+                    flightStatus[Math.floor(Math.random()*6)], 
                     {from: oracle.address});
           }
           catch(e) {
