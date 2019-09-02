@@ -261,7 +261,17 @@ contract FlightSuretyData {
             {
                 delete authorizedContracts[contractAddress];
             }
-
+    /**
+    * @dev check authorize contract
+    */
+    function checkAuthorizeContract( address contractAddress)
+            external
+            view
+            requireContractOwner
+            returns(uint256)
+            {
+                return authorizedContracts[contractAddress];
+            }
     /********************************************************************************************/
     /*                                   CONTRACT FUNCTION                                      */
     /********************************************************************************************/

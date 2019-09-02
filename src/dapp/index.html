@@ -27,20 +27,17 @@
                 <div class="operator-setting col-lg-6">
                     <h5>Smart Contract</h5>
                     <div class="custom-control custom-radio ">
-                        <input type="radio" class="custom-control-input" id="defaultUnchecked" name="defaultExampleRadios">
-                        <label class="custom-control-label" for="defaultUnchecked">Open</label>
+                        <input type="radio" class="custom-control-input" id="operationalStatusOpen" name="operationalStatusRadios" checked>
+                        <label class="custom-control-label" for="operationalStatusOpen">Open</label>
                     </div>
                     <div class="custom-control custom-radio ">
-                        <input type="radio" class="custom-control-input" id="defaultChecked" name="defaultExampleRadios" checked>
-                        <label class="custom-control-label" for="defaultChecked">Closs</label>
+                        <input type="radio" class="custom-control-input" id="operationalStatusClose" name="operationalStatusRadios">
+                        <label class="custom-control-label" for="operationalStatusClose">Closs</label>
                     </div>
                  </div>
                  <div class="authorize-contract col-lg-6 ">
-                    <select class="browser-default custom-select">
+                    <select class="browser-default custom-select" id="logic-contract-address">
                             <option selected>Logic SmartContract</option>
-                            <option value="1">0xF65cF82********EF0121c</option>
-                            <option value="2">0xF65cF82********EF0121c</option>
-                            <option value="3">0xF65cF82********EF0121c</option>
                     </select>
                     <btn class="btn btn-primary top-10" id="authorize-contract">Authorize</btn>
                  </div>
@@ -247,7 +244,6 @@
                 </table>
                       <btn class="btn btn-primary "id="buy-insures">WithDraw</btn>
         </section> 
-
 </body>
 
 </html>

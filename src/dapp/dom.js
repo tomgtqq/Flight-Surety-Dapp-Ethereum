@@ -20,10 +20,21 @@ export default class DOM {
       `role`,
     ];
     
+    static createOption(text,value){
+      const option = document.createElement("option");
+      option.text = text;
+      option.value = value;
+      return option;
+    }
+
     static elid(id) { 
       return document.getElementById(id);
     }
-  
+
+    static elQuery(e) { 
+      return document.querySelector(e);
+    }
+
     static appendText(el, text) {
       const textNode = document.createTextNode(text);
       el.appendChild(textNode);

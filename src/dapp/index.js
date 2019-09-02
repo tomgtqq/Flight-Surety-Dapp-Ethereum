@@ -10,9 +10,54 @@ import './flightsurety.css';
 
     let contract = new Contract('localhost', () => {
 
+        /***********************************************/
+        /*                Administrator                */
+        /***********************************************/
+        const contractAddress={
+                    'ligic_contract': contract.appAddress
+                };
+        const appAddress = contractAddress['ligic_contract'];
+        
+        // Select contract address
+        DOM.elid("logic-contract-address").appendChild(
+            DOM.createOption(
+                appAddress.slice(0,8).padEnd(36,'*').concat(appAddress.slice(-6))
+               ,'ligic_contract')
+        );
+       
+        // Authorize
+        DOM.elid('authorize-contract').addEventListener('click', async() => {
+            let e = DOM.elid('logic-contract-address');
+            let value =  e.options[e.selectedIndex].value
+            await contract.authorizeContract(contractAddress[value]);
+            let resutl = await contract.checkAuthorizeContract(contractAddress[value]);
+            console.log(`resutl:${resutl}`);
+            if(resutl == true){
+               alert('Authorized')
+            }else{
+               alert('Authorized Fail')
+            }
+        })
+
+        // Set Contract Operational status
+
+        DOM.elid('operationalStatusOpen').addEventListener('click', async() => {
+            await contract.setOperatingStatus(true);
+        })
+        DOM.elid('operationalStatusClose').addEventListener('click', async() => {
+            await contract.setOperatingStatus(false);
+        })
+
+       
+
         // Read transaction
         contract.isOperational((error, result) => {
             console.log(error,result);
+            // if(result){
+            //     DOM.elid('operationalStatusOpen').checked = true;
+            // }else{
+            //     DOM.elid('operationalStatusClose').checked = true;
+            // }
             display('Operational Status', 'Check if contract is operational', [ { label: 'Operational Status', error: error, value: result} ]);
         });
     
