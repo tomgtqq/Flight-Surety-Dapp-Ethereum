@@ -110,7 +110,7 @@ contract FlightSuretyApp {
         bool approved;
     }
     mapping(uint => Ballot) ballots;
-    uint256 nextBallotId = 1;
+    uint256 public nextBallotId = 1;
 
     mapping(address => mapping(uint => bool)) votes;
 
@@ -132,6 +132,9 @@ contract FlightSuretyApp {
         nextBallotId++;
     }
 
+    function getNextBallotId() external view returns(uint256){
+      return nextBallotId;
+    }
    /**
     * @dev vote for adding an airline to the registration queue
     *

@@ -3,247 +3,206 @@
 
 <head>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>FlightSurety</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>FlightSurety</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
 
 </head>
 
 <body>
 
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-        <a class="navbar-brand" href="#">FlightSurety</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault"
-            aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </nav>
-    <!-- administrator -->
-    <section id="administrator" class=" container top-100 col-lg-6 mx-auto ">
-            <h2>Administrator</h2>
-            <div class="row">
-                <div class="operator-setting col-lg-6">
-                    <h5>Smart Contract</h5>
-                    <div class="custom-control custom-radio ">
-                        <input type="radio" class="custom-control-input" id="operationalStatusOpen" name="operationalStatusRadios" checked>
-                        <label class="custom-control-label" for="operationalStatusOpen">Open</label>
-                    </div>
-                    <div class="custom-control custom-radio ">
-                        <input type="radio" class="custom-control-input" id="operationalStatusClose" name="operationalStatusRadios">
-                        <label class="custom-control-label" for="operationalStatusClose">Closs</label>
-                    </div>
-                 </div>
-                 <div class="authorize-contract col-lg-6 ">
-                    <select class="browser-default custom-select" id="logic-contract-address">
-                            <option selected>Logic SmartContract</option>
-                    </select>
-                    <btn class="btn btn-primary top-10" id="authorize-contract">Authorize</btn>
-                 </div>
-            </div>    
-    </section>
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="#">FlightSurety</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+      aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </nav>
+  <!-- administrator -->
+  <section id="administrator" class=" container top-100 col-lg-6 mx-auto ">
+    <h2>Administrator</h2>
+    <div class="row">
+      <div class="operator-setting col-lg-6">
+        <h5>Smart Contract</h5>
+        <form action="" id="operationalStatus">
+          <div class="custom-control custom-radio ">
+            <input type="radio" class="custom-control-input" id="operationalStatusOpen" name="operationalStatusRadios"
+              checked>
+            <label class="custom-control-label" for="operationalStatusOpen">Open</label>
+          </div>
+          <div class="custom-control custom-radio ">
+            <input type="radio" class="custom-control-input" id="operationalStatusClose" name="operationalStatusRadios">
+            <label class="custom-control-label" for="operationalStatusClose">Closs</label>
+          </div>
+        </form>
+      </div>
+      <div class="authorize-contract col-lg-6 ">
+        <select class="browser-default custom-select" id="logic-contract-address">
+          <option selected>Logic SmartContract</option>
+        </select>
+        <btn class="btn btn-primary top-10" id="authorize-contract">Authorize</btn>
+      </div>
+    </div>
+  </section>
 
-    <!-- create a new airline -->
-    <section id="create-airline" class=" container col-lg-6 mx-auto ">
-            <h2>Create airline</h2>
-                <div class="row">
-                    <div class="airline-address col-lg-6">
-                        <label for="airline-address-id">Airline address</label>
-                        <input type="text" id="airline-address-id" class="form-control">
-                    </div>
-                    <div class="airline-name col-lg-6">
-                            <label for="airline-name-id">Airline name</label>
-                            <input type="text" id="airline-name-id" class="form-control">
-                    </div>
-                </div>    
-                <div class="row top-20 bottom-20">
-                    <div class="col-lg-4">
-                        <select class="browser-default custom-select ">
-                                <option selected>Smart Contract Registered</option>
-                                <option value="1">Sas</option>
-                                <option value="2">Aeroflot</option>
-                                <option value="3">Aer Lingus</option>
-                        </select>
-                    </div>
-                    <div class="col-lg-6">
-                        <btn class="btn btn-primary" id="create-airline">Create</btn>
-                    </div>
-                </div>
-            <h5> Registration of fifth airlines requires multi-party consensus of 50% of registered airlines</h5>
-            <div class="row top-20 ">
-                <div class="col-lg-4">
-                    <select class="browser-default custom-select ">
-                            <option selected>Smart Contract Registered</option>
-                            <option value="1">Sas</option>
-                            <option value="2">Aeroflot</option>
-                            <option value="3">Aer Lingus</option>
-                    </select>
-                </div>
-                <div class="col-lg-6">
-                    <div class="custom-control custom-radio ">
-                        <input type="radio" class="custom-control-input" id="agree" name="vote">
-                        <label class="custom-control-label" for="agree">agree</label>
-                    </div>
-                    <div class="custom-control custom-radio ">
-                        <input type="radio" class="custom-control-input" id="disagree" name="vote" checked>
-                        <label class="custom-control-label" for="disagree">disagree</label>
-                    </div>
-                </div>
-                <div class="col-lg-2">
-                        <span class="vote-text">1/5</span>
-                </div>
-            </div>    
-     </section>
+  <!-- create a new airline -->
+  <section id="create-airline" class=" container col-lg-6 mx-auto ">
+    <h2>Create airline</h2>
 
-     <!-- airline sends funds -->
-     <section id="airline-send-fund" class=" container col-lg-6 mx-auto ">
-            <h2>New airline send funds</h2>
-                <div class="row top-20">
-                    <div class="col-lg-4">
-                            <select class="browser-default custom-select ">
-                                    <option selected>Smart Contract Registered</option>
-                                    <option value="1">Sas</option>
-                                    <option value="2">Aeroflot</option>
-                                    <option value="3">Aer Lingus</option>
-                            </select>
-                    </div>
-                    <div class="airline-name col-lg-4">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">$</span>
-                                </div>
-                                <input type="text" class="form-control mr-0 pr-0" aria-label="Amount">
-                                <div class="input-group-append">
-                                     <span class="input-group-text">ether</span>
-                                </div>
-                            </div>
-                     </div>
-                     <div class="col-lg-4">
-                            <btn class="btn btn-primary" id="create-airline">Send</btn>
-                     </div>
-                </div>    
-     </section> 
+    <btn class="btn btn-primary top-10 col-lg-6 mlr-5" id="airline1">Fund 1st airline</btn>
+    <btn class="btn btn-primary top-10 col-lg-6 mlr-5" id="airline2">Register and fund 2rd airline</btn>
+    <btn class="btn btn-primary top-10 col-lg-6 mlr-5" id="airline3">Register and fund 3rd airline</btn>
+    <btn class="btn btn-primary top-10 col-lg-6 mlr-5" id="airline4">Register and fund 4rd airline</btn>
+    <h5 class="top-20 bottom-20"> Registration of fifth airlines requires multi-party consensus of 50% of registered
+      airlines</h5>
+    <div class="row top-10">
+      <div class="airline-address col-lg-6">
+        <label for="airline-address-id">Airline address</label>
+        <input type="text" id="airline-address-id" value="0xf9aaDAA2A24522c8B89226e45D0cB2387a23d769"
+          class="form-control">
+      </div>
+      <div class="airline-name col-lg-6">
+        <label for="airline-name-id">Airline name</label>
+        <input type="text" id="airline-name-id" value="Air China" class="form-control">
+      </div>
+    </div>
+    <div class="top-20">
+      <btn class="btn btn-primary" id="create-ballot">Create Ballot</btn>
+    </div>
+    <div class="row top-20 bottom-20">
+      <div class="col-lg-6">
+        <select class="browser-default custom-select " id="registered-airline">
+          <option selected>Registered airlines</option>
+        </select>
+      </div>
+      <div class="col-lg-4">
+        <btn class="btn btn-primary" id="register-vote">Vote</btn>
+      </div>
+      <div class="col-lg-2 vote-text">
+      </div>
+    </div>
+    <div class="mx-auto">
+      <btn class="btn btn-primary" id="register-airline">Register</btn>
+    </div>
+  </section>
 
-    <!-- Buy flight insurance -->
-    <section id="airline-send-fund" class=" container col-lg-6 mx-auto ">
-        <h2>Buy insurance</h2>
-            <div class="col-lg-4 top-10">
-                    <select class="browser-default custom-select ">
-                            <option selected>Select the flight to insure</option>
-                            <option value="1">SK806</option>
-                            <option value="2">SU2583</option>
-                            <option value="3">AL2583</option>
-                            <option value="4">U23151</option>
-                            <option value="5">CA788</option>
-                            <option value="6">LX461</option>
-                    </select>
-            </div>
-            <table class="table flight-info top-20">
-                    <thead>
-                      <tr>
-                        <th scope="col">Airline</th>
-                        <th scope="col">Flight</th>
-                        <th scope="col">From</th>
-                        <th scope="col">To</th>
-                        <th scope="col">Depart Time</th>
-                        <th scope="col">Arrival Time</th>
-                        <th scope="col">Flight Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>Sas</td>
-                        <td>SK806</td>
-                        <td>LHR  London London Heathrow Airport T2</td>
-                        <td>EWR  New York Newark Liberty International Airport B</td>
-                        <td>Sep 1 17:15</td>
-                        <td>Sep 2 13:15</td>
-                        <td>bording</td>
-                      </tr>
-                    </tbody>
-            </table>
-            <btn class="btn btn-primary "id="buy-insures">Buy</btn>
-    </section> 
-
-    <main class="container col-lg-6 mx-auto ">
-        <h2>Flight Update</h2>
-        <div id="display-wrapper" class="top-20">
+  <!-- Buy flight insurance -->
+  <section id="airline-send-fund" class=" container col-lg-6 mx-auto ">
+    <h2>Buy insurance</h2>
+    <select class="browser-default custom-select col-lg-6" id="select-flight">
+      <option value="-1" selected>Select the flight to insure</option>
+    </select>
+    <table class="table flight-info top-20" id="flightSchedules">
+      <thead>
+        <tr>
+          <th scope="col">Flight</th>
+          <th scope="col">From</th>
+          <th scope="col">To</th>
+          <th scope="col">Depart Time</th>
+          <th scope="col">Arrival Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr id="flightSchedules-tr">
+        </tr>
+      </tbody>
+    </table>
+    <div class="row top-10">
+      <div class="airline-name col-lg-4">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text">$</span>
+          </div>
+          <input type="text" class="form-control mr-0 pr-0" id="buyInsuranceValue" aria-label="Amount">
+          <div class="input-group-append">
+            <span class="input-group-text">ether</span>
+          </div>
         </div>
-        <div class="row top-20">
-            <div class="col-lg-4">
-                 <select class="browser-default custom-select ">
-                    <option selected>Flight</option>
-                    <option value="1">SK806</option>
-                    <option value="2">SU2583</option>
-                    <option value="3">AL2583</option>
-                </select>
-            </div>
-            <div class="col-lg-4">
-                    <btn class="btn btn-primary" id="submit-oracle">Fetch</btn>
-            </div>
-        </div>
-    </main>
+      </div>
+      <div class="col-lg-6">
+        <btn class="btn btn-primary" id="buy-insures">Buy</btn>
+      </div>
+    </div>
 
-    <!-- Claim insurance -->
-    <section id="claim-insurance" class=" container col-lg-6 top-20">
-            <h2>Claim insurance</h2>
-                <div class="col-lg-4 top-10">
-                        <select class="browser-default custom-select ">
-                                <option selected>Select the flight to insure</option>
-                                <option value="1">SK806</option>
-                                <option value="2">SU2583</option>
-                                <option value="3">AL2583</option>
-                                <option value="4">U23151</option>
-                                <option value="5">CA788</option>
-                                <option value="6">LX461</option>
-                        </select>
-                </div>
-                <table class="table flight-info top-20 col-lg-6">
-                        <thead>
-                          <tr>
-                            <th scope="col">Airline</th>
-                            <th scope="col">Flight</th>
-                            <th scope="col">From</th>
-                            <th scope="col">To</th>
-                            <th scope="col">Depart Time</th>
-                            <th scope="col">Arrival Time</th>
-                            <th scope="col">Flight Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td>Sas</td>
-                            <td>SK806</td>
-                            <td>LHR  London London Heathrow Airport T2</td>
-                            <td>EWR  New York Newark Liberty International Airport B</td>
-                            <td>Sep 1 17:15</td>
-                            <td>Sep 2 13:15</td>
-                            <td>bording</td>
-                          </tr>
-                        </tbody>
-                </table>
-                      
-                <btn class="btn btn-primary "id="buy-insures">Claim</btn>
-          
-                <table class="table flight-info top-20 col-lg-6">
-                  <thead>
-                    <tr>
-                      <th scope="col">Credit values</th>
-                      <th scope="col">Wallet Balance</th>
-                      <th scope="col">Unit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>10008</td>
-                      <td>1800</td>
-                      <td>ether</td>
-                    </tr>
-                  </tbody>
-                </table>
-                      <btn class="btn btn-primary "id="buy-insures">WithDraw</btn>
-        </section> 
+  </section>
+
+  <main class="container col-lg-6 mx-auto ">
+    <h2>Flight Update</h2>
+    <div id="display-wrapper" class="top-20">
+    </div>
+    <div class="row top-20">
+      <div class="col-lg-4">
+        <select class="browser-default custom-select" id="FlightUpdate-select">
+          <option selected>Select flight to update</option>
+        </select>
+      </div>
+      <div class="col-lg-4">
+        <btn class="btn btn-primary" id="submit-oracle">Fetch</btn>
+      </div>
+    </div>
+  </main>
+
+  <!-- Claim insurance -->
+  <section id="claim-insurance" class=" container col-lg-6 top-20">
+    <h2>Claim insurance</h2>
+    <div class="col-lg-4 top-10">
+      <select class="browser-default custom-select ">
+        <option selected>Select the flight to insure</option>
+        <option value="1">SK806</option>
+        <option value="2">SU2583</option>
+        <option value="3">AL2583</option>
+        <option value="4">U23151</option>
+        <option value="5">CA788</option>
+        <option value="6">LX461</option>
+      </select>
+    </div>
+    <table class="table flight-info top-20 col-lg-6">
+      <thead>
+        <tr>
+          <th scope="col">Airline</th>
+          <th scope="col">Flight</th>
+          <th scope="col">From</th>
+          <th scope="col">To</th>
+          <th scope="col">Depart Time</th>
+          <th scope="col">Arrival Time</th>
+          <th scope="col">Flight Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Sas</td>
+          <td>SK806</td>
+          <td>LHR London London Heathrow Airport T2</td>
+          <td>EWR New York Newark Liberty International Airport B</td>
+          <td>Sep 1 17:15</td>
+          <td>Sep 2 13:15</td>
+          <td>bording</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <btn class="btn btn-primary " id="buy-insures">Claim</btn>
+
+    <table class="table flight-info top-20 col-lg-6">
+      <thead>
+        <tr>
+          <th scope="col">Credit values</th>
+          <th scope="col">Wallet Balance</th>
+          <th scope="col">Unit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>10008</td>
+          <td>1800</td>
+          <td>ether</td>
+        </tr>
+      </tbody>
+    </table>
+    <btn class="btn btn-primary " id="buy-insures">WithDraw</btn>
+  </section>
 </body>
 
 </html>

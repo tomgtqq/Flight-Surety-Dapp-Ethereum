@@ -45,7 +45,7 @@ contract FlightSuretyData {
         contractOwner = msg.sender;
 
         airlines[firstAirline] = Profile({
-            name:"FAL",
+            name:"Sas",
             isRegistered: true,
             isFunded: false,
             airline: firstAirline
@@ -472,4 +472,3 @@ contract FlightSuretyData {
     }
 
 }
-

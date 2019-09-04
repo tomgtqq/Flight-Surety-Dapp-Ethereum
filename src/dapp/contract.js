@@ -2,6 +2,7 @@ import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
 import FlightSuretyData from '../../build/contracts/FlightSuretyData.json';
 import Config from './config.json';
 import Web3 from 'web3';
+import { log } from 'util';
 
 export default class Contract {
     constructor(network, callback) {
@@ -11,31 +12,36 @@ export default class Contract {
         this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
         this.flightSuretyData = new this.web3.eth.Contract(FlightSuretyData.abi, config.dataAddress);
         this.appAddress = config.appAddress;
-        this.initialize(callback);
         this.owner = null;
-        this.airlines = [];
+        this.accounts = null;
         this.passengers = [];
+        this.airlines= [
+                            {   
+                                name: "Sas",
+                                airline: '0x74F4b95b8DF892AC46B12755FafD517c416C75c9',
+                                isRegistered: true,
+                                isFunded:false
+                            }
+                        ]
+
+        this.fundAmount = Web3.utils.toWei("10", "ether");
+        this.initialize(callback);
     }
 
     initialize(callback) {
-        this.web3.eth.getAccounts((error, accts) => {
-           
+        this.web3.eth.getAccounts(async (err, accts) => {
             this.owner = accts[0];
-
-            let counter = 1;
-            
-            while(this.airlines.length < 5) {
-                this.airlines.push(accts[counter++]);
-            }
+            this.accounts = accts;
+            let counter = 5;
 
             while(this.passengers.length < 5) {
                 this.passengers.push(accts[counter++]);
             }
 
-            callback();
+            callback(err,accts);
         });
     }
-
+    
     isOperational(callback) {
        let self = this;
        self.flightSuretyApp.methods
@@ -43,42 +49,135 @@ export default class Contract {
             .call({ from: self.owner}, callback);
     }
 
-    fetchFlightStatus(flight, callback) {
+    async fetchFlightStatus(airline,flight,timestamp, callback) {
+        let self = this;
+        await self.flightSuretyApp.methods
+            .fetchFlightStatus(airline, flight, timestamp)
+            .send({ from: self.passengers[1]}, (error, result) => {
+                console.log(error,result);
+                //callback(error, result);//TODO resturn playload when get status
+            });    
+ 
+    }
+
+    async 
+
+    authorizeContract (appAddress,callback) {
+        let self = this;
+        self.flightSuretyData.methods
+             .authorizeContract(appAddress)
+             .send({ from: self.owner},callback);
+     }
+
+    setOperatingStatus (mode,callback) {
+        let self = this;
+        self.flightSuretyApp.methods
+             .setOperatingStatus(mode)
+             .send({ from: self.owner},callback);
+     }
+
+    async fund (acct,callback) {
+        let self = this;
+        await self.flightSuretyData.methods.fund()
+        .send({ from: acct, value: self.fundAmount,gas:30000000000,
+            gasPrice:100000},(error,result)=>{
+                if(!error){
+                    alert("Fund successfully");
+                    for(let i=0; i< self.airlines.length; i++){
+                        if(self.airlines[i].airline === acct){
+                            self.airlines[i].isFunded = true;
+                        }
+                    }
+                }
+            callback(error,result);
+        })
+     }
+
+    async registerAirline (name,airline,id,acct,callback) {
         let self = this;
         let payload = {
-            airline: self.airlines[0],
-            flight: flight,
-            timestamp: Math.floor(Date.now() / 1000)
-        } 
-        self.flightSuretyApp.methods
-            .fetchFlightStatus(payload.airline, payload.flight, payload.timestamp)
-            .send({ from: self.owner}, (error, result) => {
-                callback(error, payload);
+                name:name,
+                airline:airline,
+                isRegistered: true,
+                isFunded:false
+             }
+        await self.flightSuretyApp.methods.registerAirline(name, airline, id).send({ from: acct ,gas:30000000000,
+            gasPrice:100000}, (error, result) => {
+                if(!error){
+                    alert("Register Successfully"); 
+                    self.airlines.push(payload); 
+                }
+            callback(error, result);
+        });
+     }
+
+    async createBallot(name,airline,acct,callback){
+        let self = this;
+        await self.flightSuretyApp.methods.createBallot(name,airline)
+        .send({ from: acct ,gas:30000000000,
+            gasPrice:100000}, (error, result) => {
+                if(!error){
+                    alert("Create Ballot Successfuly")
+                }
+            callback(error, result);
+        });
+     }
+
+    async getAirlinesAmount(acct,callback){
+            let self = this;
+            await self.flightSuretyData.methods
+            .getAirlinesAmount()
+            .call({from: acct},(error, result)=>{
+                if(error){
+                    console.error(error)
+                    alert('Get airlines amount fail')
+                }
+              callback(error,result)
             });
     }
 
-    async authorizeContract (appAddress) {
+     async vote (ballotId,acct,callback){
         let self = this;
-        await self.FlightSuretyData.methods
-             .authorizeContract(appAddress)
-             .send({ from: self.owner});
+        await self.flightSuretyApp.methods.vote(ballotId).send({ from: acct, gas:30000000000,
+            gasPrice:100000},(error, result)=>{
+                if(!error){
+                    alert('Vote successfully')
+                }
+              callback(error,result)
+            });
      }
 
-     async checkAuthorizeContract(appAddress){
-        let self = this;
-        return await self.FlightSuretyData.methods
-             .checkAuthorizeContract(appAddress)
-             .call({ from: self.owner});
+     async getVoteInfo (ballotId,acct) {
+         let self = this;
+        await self.flightSuretyApp.methods.getVoteInfo(ballotId)
+                .call({ from: acct });
      }
 
-     async setOperatingStatus (mode) {
-        let self = this;
-        await self.flightSuretyApp.methods
-             .setOperatingStatus(mode)
-             .send({ from: self.owner});
-
-        await self.flightSuretyData.methods
-        .setOperatingStatus(mode)
-        .send({ from: self.owner});
+     async getNextBallotId(callback){
+         let self = this;
+         await self.flightSuretyApp.methods.getNextBallotId()
+                .call({from: self.accounts[1]},(error, result)=>{
+                  callback(error,result)
+                });
      }
+
+     async getNextBallotId(callback){
+        let self = this;
+        await self.flightSuretyApp.methods.getNextBallotId()
+               .call({from: self.accounts[1]},(error, result)=>{
+                 callback(error,result)
+               });
+    }
+
+    async buyInsurance(airline,flight,timestamp,value,callback){
+        let self = this;
+        await self.flightSuretyData.methods.buyInsurance(airline,flight,timestamp)
+        .send({ from: self.passengers[1], value: Web3.utils.toWei(`${value}`, "ether"),gas:30000000000,
+            gasPrice:100000},(error,result)=>{
+                if(!error){
+                    alert("Buy Insurance successfully");
+                }
+            callback(error,result);
+        })
+    }
 }

@@ -35,6 +35,17 @@ export default class DOM {
       return document.querySelector(e);
     }
 
+    static appendTd(el, text){
+      const td = document.createElement("td");
+      const textNode = document.createTextNode(text);
+      td.appendChild(textNode);
+      el.appendChild(td);
+    }
+
+    static removeChild(el){
+        el.innerHTML = '';
+    }
+
     static appendText(el, text) {
       const textNode = document.createTextNode(text);
       el.appendChild(textNode);

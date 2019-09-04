@@ -62,6 +62,8 @@ const registerOracle = async () => {
                     ]
                   });
               }
+
+              console.log(`OracleRequest registerOracle : ${JSON.stringify(oracleIndexes, null, 4)}`);
             }
     catch(e) {
          console.error(e);
@@ -71,31 +73,35 @@ const registerOracle = async () => {
 registerOracle();
 
 flightSuretyApp.events.OracleRequest({
-    fromBlock: 0
+    fromBlock: "latest"
   }, async (error, event) => {
     if (error) console.log(error)
     console.log(event)
 
-    let reqIndex = new BigNumber(event.index).toString();
-
+    let reqIndex = new BigNumber(event.returnValues.index).toString();
+    console.log(`OracleRequest reqIndex : ${reqIndex}`);
     let resOracles = oracleIndexes.filter((oraclse)=>{
         return (oraclse.indexes[0] === reqIndex||oraclse.indexes[1] === reqIndex||oraclse.indexes[2] === reqIndex)
     });
+    console.log(`OracleRequest resOracles : ${JSON.stringify(resOracles, null, 4)}`);
 
     for (const oracle of resOracles){  
           try {
+            console.log(`OracleRequest oracle : ${JSON.stringify(oracle, null, 4)}`);
             // Submit a response...it will only be accepted if there is an Index match
             await flightSuretyApp.methods.submitOracleResponse( 
-                    event.index, 
-                    event.airline, 
-                    event.flight, 
-                    event.timestamp, 
+                    reqIndex, 
+                    event.returnValues.airline, 
+                    event.returnValues.flight, 
+                    event.returnValues.timestamp, 
                     flightStatus[Math.floor(Math.random()*6)], 
-                    {from: oracle.address});
+                    ).send({from: oracle.address,
+                            gas:30000000000,
+                            gasPrice:100000});
           }
           catch(e) {
-            // Enable this when debugging
-              console.log('\nNot match Oracles', event.index, event.airline, event.timestamp,oracle.address);
+              console.error(e);
+              console.log('\nNot match Oracles', reqIndex, event.returnValues.airline, event.returnValues.timestamp,oracle.address);
           }
         }
 });
