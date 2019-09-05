@@ -83,8 +83,8 @@ flightSuretyApp.events.OracleRequest({
     let resOracles = oracleIndexes.filter((oraclse)=>{
         return (oraclse.indexes[0] === reqIndex||oraclse.indexes[1] === reqIndex||oraclse.indexes[2] === reqIndex)
     });
-    // let statusCode = new BigNumber(flightStatus[Math.floor(Math.random()*6)]).toString();
-    let statusCode = new BigNumber(20).toString();
+    let statusCode = new BigNumber(flightStatus[Math.floor(Math.random()*6)]).toString();
+    //let statusCode = new BigNumber(20).toString();
     console.log(`OracleRequest resOracles : ${JSON.stringify(resOracles, null, 4)}`);
 
     for (const oracle of resOracles){  

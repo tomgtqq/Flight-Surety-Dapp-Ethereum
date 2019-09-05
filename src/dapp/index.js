@@ -136,6 +136,8 @@ import './flightsurety.css';
                 if (!error) {
                     console.log(`${accounts[1]} Sas funded`);
                     alert('Successfully fund 1st airline')
+                }else{
+                    alert("Can't register new airline");
                 }
             })
         })
@@ -156,7 +158,7 @@ import './flightsurety.css';
                             }
                         })
                     } else {
-                        alert('Airline is already registered');
+                        alert("Can't register new airline");
                     }
                 })
         })
@@ -177,7 +179,7 @@ import './flightsurety.css';
                             }
                         })
                     } else {
-                        alert('Airline is already registered');
+                        alert("Can't register new airline");
                     }
                 })
         })
@@ -198,7 +200,7 @@ import './flightsurety.css';
                             }
                         })
                     } else {
-                        alert('Airline is already registered');
+                        alert("Can't register new airline");
                     }
                 })
         })
