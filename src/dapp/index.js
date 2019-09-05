@@ -56,18 +56,24 @@ import './flightsurety.css';
             "dCity": "LCY  London London City Airport",
             "aCity": "PEK  Beijing Beijing Capital International Airport T3",
             "departCNDate": "2019-10-10 10:00:00",
-            "arrivalCNDate": "Sep 12 05:15",
+            "arrivalCNDate": "2019-10-10 12:05:15",
             "status": "",
             "airline": "0xb1Ff48dAAdC28e9376137A4C46fa76b83baa24c0"
         }
     };
 
-
+    let flightStatus = new Map([
+        [0, 'UNKNOW'],
+        [10, 'ON TIME'],
+        [20, 'LATE DUE TO AIRLINE'],
+        [30, 'LATE DUE TO WEATHER'],
+        [40, 'LATE DUE TO TECHNICAL'],
+        [50, 'LATE DUE TO OTHER'],
+    ]);
 
     let contract = new Contract('localhost', (err, accts) => {
 
         const accounts = accts;
-
         let agree = 0;
         let amountVotes = 0;
 
@@ -91,7 +97,7 @@ import './flightsurety.css';
                     alert('Authorized Fail')
                 }
             });
-        })
+        });
 
         // Set Contract Operational status
         DOM.elid('operationalStatusOpen').addEventListener('click', () => {
@@ -303,20 +309,22 @@ import './flightsurety.css';
         })
 
         DOM.elid("select-flight").onchange = () => {
-
             console.log('Select flight to buy insurance');
             let e = DOM.elid("select-flight");
             let flightNumber = e.options[e.selectedIndex].value
             if (e.selectedIndex > 0) {
-                DOM.removeChild(DOM.elid("flightSchedules-tr"));
                 let flight = search(flightNumber, Object.values(flightSchedules));
-                flight[4] = convertDate(flight[4]);
-                flight[5] = convertDate(flight[5]);
-                console.log(values);
-                for (let i = 0; i < 5; i++) {
-                    DOM.appendTd(DOM.elid("flightSchedules-tr"), values[i])
-                    console.log(values[i]);
-                }
+                flight['departCNDate'] = convertDate(flight['departCNDate']);
+                flight['arrivalCNDate'] = convertDate(flight['arrivalCNDate']);
+                console.log(flightNumber);
+                console.log(`flight ${JSON.stringify(flight, null, 4)}`);
+
+                DOM.setText(DOM.elid("flightSchedules-flight"), flight['flight'])
+                DOM.setText(DOM.elid("flightSchedules-from"), flight['dCity'])
+                DOM.setText(DOM.elid("flightSchedules-to"), flight['aCity'])
+                DOM.setText(DOM.elid("flightSchedules-departTime"), flight['departCNDate'])
+                DOM.setText(DOM.elid("flightSchedules-arrivalTime"), flight['arrivalCNDate'])
+
             }
         }
         DOM.elid('buy-insures').addEventListener('click', () => {
@@ -326,7 +334,10 @@ import './flightsurety.css';
             let flightSchedule = search(flightNumber, Object.values(flightSchedules));
             let airline = flightSchedule.airline;
             let flight = flightSchedule.flight;
-            let timestamp = (convertDate(flightSchedule.departCNDate).getTime() / 1000); //Convert UNXI timeStamp
+
+            let date = flightSchedule.departCNDate;
+            let timestamp = (date.getTime() / 1000); //Convert UNXI timeStamp
+
             let value = DOM.elid("buyInsuranceValue").value;
             console.log(airline, flight, timestamp, value);
 
@@ -372,34 +383,81 @@ import './flightsurety.css';
             let flightSchedule = search(flightNumber, Object.values(flightSchedules));
             let airline = flightSchedule.airline;
             let flight = flightSchedule.flight;
-            let timestamp = (convertDate(flightSchedule.departCNDate).getTime() / 1000); //Convert UNXI timeStamp
+
+            let date = flightSchedule.departCNDate;
+            let timestamp = (date.getTime() / 1000); //Convert UNXI timeStamp
+
             console.log(airline, flight, timestamp);
 
             //Write transaction
-            contract.fetchFlightStatus(airline,flight,timestamp, (error, result) => {
-                display('Oracles', 'Trigger oracles', [{
-                    label: 'Fetch Flight Status',
-                    error: error,
-                    value: result.flight + ' ' + result.timestamp
-                }]);
+            contract.fetchFlightStatus(airline, flight, timestamp, (error, result) => {
+                contract.eventFlightStatusInf().then((result) => {
+                        let status = flightStatus.get(Number(result));
+                        let title = (Number(result) == 20) ? "Claim insurance" : "Can't claim insrurance"
+                        console.log(status, result);
+                        display(title, 'Trigger oracles', [{
+                            label: 'Fetch Flight Status',
+                            error: error,
+                            value: `The ${flight}'s status is ${status}`
+                        }]);
+                    })
+                    .catch((err) => {
+                        alert('Fetch Flight Status fail')
+                    })
             });
+        });
 
-            // contract.fetchFlightStatus(flightNumber, (error, result) => {
-            //     display('Oracles', 'Trigger oracles', [{
-            //         label: 'Fetch Flight Status',
-            //         error: error,
-            //         value: result.flight + ' ' + result.timestamp
-            //     }]);
-            // });
-        })
-    });
+        // Claim insurance
+        DOM.elid('claim-insures').addEventListener('click', async () => {
+            console.log('Claim insurance');
+
+            let e = DOM.elid('FlightUpdate-select');
+            let flightNumber = e.options[e.selectedIndex].value
+            let flightSchedule = search(flightNumber, Object.values(flightSchedules));
+            let airline = flightSchedule.airline;
+            let flight = flightSchedule.flight;
+
+            let date = flightSchedule.departCNDate;
+            let timestamp = (date.getTime() / 1000); //Convert UNXI timeStamp
+
+            console.log(airline, flight, timestamp);
+            if (!airline || !flight || !timestamp) {
+                alert('Please first selected flight had been updated');
+                return;
+            }
+            contract.appCreditInsurees(airline, flight, timestamp, (error, result) => {
+                console.log(error, result);
+                contract.checkDeposit((error, result) => {
+                    if (error) {
+                        console.log(error);
+                        alert('Buy Insurance fail');
+                        return;
+                    }
+                    DOM.setText(DOM.elid("credit-values"), result);
+                });
+            });
+        });
+        // WithDraw insurance
+        DOM.elid('with-draw').addEventListener('click', () => {
+            console.log('WithDraw insurance');
+            let amount = DOM.elid("WithDrawAmount").value;
+            console.log(amount);
+
+            contract.safeWithdraw(amount, (error, result) => {
+                if (error) {
+                    console.log(error);
+                    alert('With draw fail');
+                }
+            });
+        });
+    })
 })();
 
 
 function display(title, description, results) {
     let displayDiv = DOM.elid("display-wrapper");
     let section = DOM.section();
-    section.appendChild(DOM.h2(title));
+    section.appendChild(DOM.h4(title));
     section.appendChild(DOM.h5(description));
     results.map((result) => {
         let row = section.appendChild(DOM.div({
@@ -417,9 +475,10 @@ function display(title, description, results) {
 }
 
 function convertDate(myString) {
-    let match = myString.match(/^(\d+)-(\d+)-(\d+) (\d+)\:(\d+)\:(\d+)$/)
-    let myDate = new Date(match[1], match[2] - 1, match[3], match[4], match[5], match[6])
-    return myDate
+    if (!myString) return;
+    let match = String(myString).match(/^(\d+)-(\d+)-(\d+) (\d+)\:(\d+)\:(\d+)$/);
+    let myDate = new Date(match[1], match[2] - 1, match[3], match[4], match[5], match[6]);
+    return myDate;
 }
 
 function searchFlightNumbers(myArray) {

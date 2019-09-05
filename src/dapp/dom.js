@@ -46,6 +46,10 @@ export default class DOM {
         el.innerHTML = '';
     }
 
+    static setText(el,text){
+      el.innerHTML = String(text);
+  }
+
     static appendText(el, text) {
       const textNode = document.createTextNode(text);
       el.appendChild(textNode);

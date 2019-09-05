@@ -83,6 +83,8 @@ flightSuretyApp.events.OracleRequest({
     let resOracles = oracleIndexes.filter((oraclse)=>{
         return (oraclse.indexes[0] === reqIndex||oraclse.indexes[1] === reqIndex||oraclse.indexes[2] === reqIndex)
     });
+    // let statusCode = new BigNumber(flightStatus[Math.floor(Math.random()*6)]).toString();
+    let statusCode = new BigNumber(20).toString();
     console.log(`OracleRequest resOracles : ${JSON.stringify(resOracles, null, 4)}`);
 
     for (const oracle of resOracles){  
@@ -94,7 +96,7 @@ flightSuretyApp.events.OracleRequest({
                     event.returnValues.airline, 
                     event.returnValues.flight, 
                     event.returnValues.timestamp, 
-                    flightStatus[Math.floor(Math.random()*6)], 
+                    statusCode, 
                     ).send({from: oracle.address,
                             gas:30000000000,
                             gasPrice:100000});
@@ -105,6 +107,24 @@ flightSuretyApp.events.OracleRequest({
           }
         }
 });
+
+flightSuretyApp.events.OracleReport({
+  fromBlock: "latest"
+}, async (error, event) => {
+  if (error) console.log(error)
+  console.log(JSON.stringify(event));
+})
+
+flightSuretyApp.events.FlightStatusInfo({
+  fromBlock: "latest"
+}, async (error, event) => {
+  if (error) console.log(error)
+  console.log(JSON.stringify(event));
+  let status = event.returnValues.status;
+  let flight = event.returnValues.flight;
+  console.log(status,flight);
+})
+
 
 
 const app = express();

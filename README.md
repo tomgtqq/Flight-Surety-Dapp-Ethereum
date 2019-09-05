@@ -8,20 +8,37 @@ This repository contains Smart Contract code in Solidity (using Truffle), tests 
 
 To install, download or clone the repo, then:
 
-`npm install`
-`truffle compile`
+```
+$npm install
+```
+
+```
+$truffle compile
+```
 
 ## Develop Client
 
+To compile project:
+
+```
+$truffle compile --all
+```
+
 To run truffle tests:
 
-`truffle test ./test/flightSurety.js`
-`truffle test ./test/oracles.js`
+```
+$truffle test
+```
 
 To use the dapp:
 
-`truffle migrate`
-`npm run dapp`
+```
+$truffle migrate --reset
+```
+
+```
+$npm run dapp
+```
 
 To view dapp:
 
@@ -30,7 +47,7 @@ To view dapp:
 ## Develop Server
 
 `npm run server`
-`truffle test ./test/oracles.js`
+`truffle test`
 
 ## Deploy
 
@@ -38,7 +55,36 @@ To build dapp for prod:
 `npm run dapp:prod`
 
 Deploy the contents of the ./dapp folder
+### Homepage
 
+![Homepage](img/homePage.png)
+
+### Activity Diagram
+
+![FlightSurety Activity Diagram](img/activityDiagram.png)
+
+### Basic Use Case
+
+![FlightSurety Basic Use Case ](img/basicUseCase.png)
+
+## Versioning
+
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
+
+## Built With
+
+* [Ethereum](https://www.ethereum.org/) - Ethereum is a decentralized platform that runs smart contracts
+* [IPFS](https://ipfs.io/) - IPFS is the Distributed Web | A peer-to-peer hypermedia protocol
+to make the web faster, safer, and more open.
+* [Truffle Framework](http://truffleframework.com/) - Truffle is the most popular development framework for Ethereum with a mission to make your life a whole lot easier.
+
+## Authors
+
+* **Tom gt** - *Fullstack egineer* - [github profile](https://github.com/tomgtbst)
+
+## License
+
+This project is licensed under the MIT License
 
 ## Resources
 
