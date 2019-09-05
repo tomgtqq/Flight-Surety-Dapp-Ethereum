@@ -45,9 +45,9 @@ To view dapp:
 `http://localhost:8000`
 
 ## Develop Server
-
-`npm run server`
-`truffle test`
+```
+npm run server
+```
 
 ## Deploy
 
