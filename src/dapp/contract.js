@@ -65,7 +65,7 @@ export default class Contract {
         callback()
     }
 
-    eventFlightStatusInf() {
+    eventFlightStatusInfo() {
         return new Promise((reslove, reject) => {
             this.flightSuretyApp.events.FlightStatusInfo({
                 fromBlock: "latest"
@@ -89,13 +89,25 @@ export default class Contract {
             }, callback);
     }
 
-    setOperatingStatus(mode, callback) {
+    async setOperatingStatus(mode, callback) {
         let self = this;
-        self.flightSuretyApp.methods
+        await self.flightSuretyData.methods
             .setOperatingStatus(mode)
             .send({
                 from: self.owner
-            }, callback);
+            }, (error, result) => {
+                console.log(error, result);
+                if (!error) {
+                    'Setting flightSuretyData Successfully'
+                }
+                self.flightSuretyApp.methods
+                    .setOperatingStatus(mode)
+                    .send({
+                        from: self.owner
+                    }, (error, result) => {
+                        callback(error, result)
+                    });
+            });
     }
 
     async fund(acct, callback) {
@@ -202,16 +214,6 @@ export default class Contract {
             });
     }
 
-    async getNextBallotId(callback) {
-        let self = this;
-        await self.flightSuretyApp.methods.getNextBallotId()
-            .call({
-                from: self.accounts[1]
-            }, (error, result) => {
-                callback(error, result)
-            });
-    }
-
     async buyInsurance(airline, flight, timestamp, value, callback) {
         let self = this;
         console.log(`buyInsurance ${airline} ${flight} ${timestamp}`);
@@ -260,16 +262,17 @@ export default class Contract {
     }
 
     async safeWithdraw(amount, callback) {
-        let self = this;
-        let value = Web3.utils.toWei(`${amount}`, "ether");
-        await self.flightSuretyData.safeWithdraw(value)
+            let self = this;
+            let value = Web3.utils.toWei(`${amount}`, "ether");
+            console.log(`The passenger:${self.passengers[1]}  safeWithdraw: ${value}`);
+            this.flightSuretyData.methods.safeWithdraw(value)
             .send({
                 from: self.passengers[1],
                 gas: 30000000000,
                 gasPrice: 100000
             }, (error, result) => {
-                if (error) console.log(error);
-                console.log(`safeWithdraw:${result}`);
+                if (!error) alert(`Withdraw ${amount} ether successfully`);
+                console.log(error, result);
                 callback(error, result);
             })
     }

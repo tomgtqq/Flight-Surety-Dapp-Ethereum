@@ -100,7 +100,12 @@ contract FlightSuretyData {
     uint256 private enabled = block.timestamp;
     modifier rateLimit(uint time){
         require(block.timestamp >= enabled, "Rate limiting in effect");
-        enabled = enabled.add(time);
+        uint256 a = enabled;
+        uint256 b = time;
+        uint256 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+        enabled = c;
+
         _;
     }
 
@@ -110,7 +115,7 @@ contract FlightSuretyData {
     uint256 private counter = 1;
 
     modifier entrancyGuard(){
-        counter = counter.add(1);
+        counter = counter+1;
         uint256 guard = counter;
         _;
         require(guard == counter,"That is not allowed");
@@ -387,7 +392,7 @@ contract FlightSuretyData {
     function safeWithdraw(uint256 amount)
                 external
                 requireIsOperational
-                rateLimit(30 minutes)
+                //rateLimit(30 minutes)
                 entrancyGuard
     {
         // Checks
@@ -395,8 +400,6 @@ contract FlightSuretyData {
         require(deposit[msg.sender] >= amount,"insufficient funds");
 
         // Effects
-        //deposit[msg.sender] = deposit[msg.sender].sub(amount);
-
         uint256 a = deposit[msg.sender];
         uint256 b = amount;
 

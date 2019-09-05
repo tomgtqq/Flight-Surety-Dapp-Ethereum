@@ -119,21 +119,14 @@ import './flightsurety.css';
         });
 
         DOM.elid('operationalStatusClose').addEventListener('click', () => {
-            contract.isOperational((error, result) => {
-                console.log(error, result);
-                if (result == false) {
-                    DOM.elid('operationalStatusClose').checked = true;
-                } else {
                     contract.setOperatingStatus(false, (error, result) => {
                         console.log(error, result);
                         if (!error) {
-                            alert('Success')
+                            alert('Setting successful')
                         } else {
-                            alert('Fail')
+                            alert('Setting Fail')
                         }
                     });
-                }
-            });
         });
 
         DOM.elid('airline1').addEventListener('click', () => {
@@ -391,7 +384,7 @@ import './flightsurety.css';
 
             //Write transaction
             contract.fetchFlightStatus(airline, flight, timestamp, (error, result) => {
-                contract.eventFlightStatusInf().then((result) => {
+                contract.eventFlightStatusInfo().then((result) => {
                         let status = flightStatus.get(Number(result));
                         let title = (Number(result) == 20) ? "Claim insurance" : "Can't claim insrurance"
                         console.log(status, result);
@@ -442,13 +435,13 @@ import './flightsurety.css';
             console.log('WithDraw insurance');
             let amount = DOM.elid("WithDrawAmount").value;
             console.log(amount);
-
-            contract.safeWithdraw(amount, (error, result) => {
-                if (error) {
+            contract.safeWithdraw(amount,(error, result) => {
+                console.log(`safeWithdraw:${result}`);
+                if(error){
                     console.log(error);
-                    alert('With draw fail');
+                    alert('Withdraw Failly');
                 }
-            });
+            })
         });
     })
 })();
