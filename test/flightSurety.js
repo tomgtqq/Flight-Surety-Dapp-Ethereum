@@ -295,8 +295,8 @@ contract('Flight Surety Tests', async (accounts) => {
             STATUS_CODE_LATE_OTHER
          ]
 
-        settingStatus = flightStatus[Math.floor(Math.random()*6)];
-        //settingStatus = STATUS_CODE_LATE_AIRLINE;
+        //settingStatus = flightStatus[Math.floor(Math.random()*6)];
+        settingStatus = STATUS_CODE_LATE_AIRLINE;
 
         let fetchTx = await config.flightSuretyApp.fetchFlightStatus(airline,flight,timestamp);
 
