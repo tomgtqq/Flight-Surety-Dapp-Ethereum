@@ -1,6 +1,9 @@
 # FlightSurety
 
 FlightSurety is a sample application project for Udacity's Blockchain course.
+![flightSurety](src/Flight-Surety-Dapp-Ethereum.png)
+
+* [Project introduction](https://mp.weixin.qq.com/s?__biz=MzIxNzU3MjA0OA==&mid=2247483673&idx=1&sn=0f97a255bd16a39e69f6e9cb8115a453&chksm=97f6f6a6a0817fb0f50a9d846560834b9bd4ad0494c698a841743d07ac1dd738e13be52a75e7&token=312677330&lang=zh_CN#rd)
 
 ## Install
 
